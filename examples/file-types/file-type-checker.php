@@ -20,9 +20,11 @@ file_put_contents('/tmp/test.php', '<?php $x = 1;');
  * """
  */
 
-// $type is FileTypeChecker::PHP which is 0
+// $type is 0 (FileTypeChecker::PHP)
 $type = $fileTypeChecker->determineType('/tmp/test.php');
 
 // deletes file /tmp/test.php
 unlink('/tmp/test.php');
 
+// Always use exit() in our example PHP files.
+exit(0);

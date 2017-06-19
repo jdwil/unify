@@ -17,8 +17,6 @@ echo "HERE I GO AGAIN\n";
 // 5
 $h = 5;
 
-exit(0);
-
 function foo(int $a) {
     return $a * 2;
 }

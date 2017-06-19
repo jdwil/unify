@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace JDWil\Unify\Parser;
 
-use JDWil\Unify\TestRunner\Assertion;
+use JDWil\Unify\Assertion\AssertEqual;
+use JDWil\Unify\Assertion\AssertFileExists;
+use JDWil\Unify\Assertion\AssertFileNotExists;
 
 class PHPParser
 {
@@ -28,6 +30,7 @@ class PHPParser
         // @todo use filesystem
         $this->lines = file($this->filePath);
 
+        // @todo use chain of responsibility. Create a pipeline where parsers can be registered.
         for ($endLine = count($this->lines), $this->lineNumber = 0; $this->lineNumber < $endLine; $this->lineNumber++) {
             $this->line = trim($this->lines[$this->lineNumber]);
             $this->processSingleLineComment();
@@ -55,7 +58,7 @@ class PHPParser
          * $foo = 'bar';
          */
         if (preg_match('/^[\'\"]?[a-zA-Z0-9_\.]+[\'\"]?$/', $this->line, $m)) {
-            $this->assertions[] = Assertion::toCheckEquality(
+            $this->assertions[] = new AssertEqual(
                 $this->getAssignedVariableFromNextLine(),
                 $m[0],
                 $this->nextStatementLine($this->lineNumber + 2),
@@ -70,11 +73,42 @@ class PHPParser
          * // $foo == 'bar'
          * // $foo === 'bar'
          */
-        if (preg_match('/(\$[a-zA-Z]\w*)\s*([=><]=?=?)\s*([\'\"]?\w[\'\"]?)/', $this->line, $m)) {
-            if (in_array($m[2], ['=', '==', '==='], true)) {
-                $this->assertions[] = Assertion::toCheckEquality($m[1], $m[3], $this->nextStatementLine($this->lineNumber + 2), $this->filePath);
+        if (preg_match('/(\$[a-zA-Z]\w*)\s*(is|[=><]=?=?)\s*([\'\"]?[a-zA-Z0-9_:>-]*[\'\"]?)/', $this->line, $m)) {
+            if (in_array($m[2], ['=', '==', '===', 'is'], true)) {
+                $this->assertions[] = new AssertEqual(
+                    $m[1],
+                    $m[3],
+                    $this->nextStatementLine($this->lineNumber + 2),
+                    $this->filePath
+                );
             }
             // @todo handle >, <, >=, <=
+        }
+
+        /**
+         * Assert a file exists
+         *
+         * // creates file /path/to/file.xyz
+         */
+        if (preg_match('/creates? file ([^\s]+)/i', $this->line, $m)) {
+            $this->assertions[] = new AssertFileExists(
+                $m[1],
+                $this->nextStatementLine($this->lineNumber + 2),
+                $this->filePath
+            );
+        }
+
+        /**
+         * Assert a file does not exist.
+         *
+         * // deletes file /path/to/file.xyz
+         */
+        if (preg_match('/deletes? file ([^\s]+)/i', $this->line, $m)) {
+            $this->assertions[] = new AssertFileNotExists(
+                $m[1],
+                $this->nextStatementLine($this->lineNumber + 2),
+                $this->filePath
+            );
         }
     }
 
@@ -94,12 +128,15 @@ class PHPParser
             if (empty($line) ||
                 strpos($line, '//') === 0 ||
                 strpos($line, '*') === 0 ||
-                strpos($line, '/*') === 0
+                strpos($line, '/*') === 0 ||
+                !preg_match('/;$/', $line)
             ) {
                 continue;
             }
 
             return $i + 1;
         }
+
+        return 0;
     }
 }

@@ -44,8 +44,9 @@ class RunCommand extends Command
             $validator->validateTrace($trace, $assertions);
             */
 
-            $session = new DebugSession('127.0.0.1', 9000);
-            $plan = $session->debugFile($file, $parser->getAssertions());
+            $session = new DebugSession('127.0.0.1', 9000, $output);
+            $assertions = $session->debugFile($file, $parser->getAssertions());
+            print_r($assertions);
             //print_r($plan->getSteps());
 
             die();

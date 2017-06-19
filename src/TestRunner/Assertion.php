@@ -6,12 +6,15 @@ namespace JDWil\Unify\TestRunner;
 class Assertion
 {
     const TYPE_EQUALS = 0;
+    const TYPE_FILE_EXISTS = 1;
 
     private $line;
     private $type;
     private $left;
     private $right;
     private $file;
+    private $result;
+    private $filePath;
 
     private function __construct() {}
 
@@ -25,6 +28,32 @@ class Assertion
         $ret->file = $file;
 
         return $ret;
+    }
+
+    public static function toCheckFileExists(string $filePath, int $line, string $file)
+    {
+        $ret = new Assertion();
+        $ret->type = self::TYPE_FILE_EXISTS;
+        $ret->line = $line;
+        $ret->file = $file;
+        $ret->filePath = $filePath;
+
+        return $ret;
+    }
+
+    public function getDebuggerCommand()
+    {
+        switch($this->type) {
+            case self::TYPE_EQUALS:
+                return "context_get -i %d -d 0 -c 0\0";
+            case self::TYPE_FILE_EXISTS:
+                return sprintf(
+                    "eval -i %%d -- %s\0",
+                    base64_encode(
+                        sprintf('file_exists(\'%s\');', $this->getFilePath())
+                    )
+                );
+        }
     }
 
     /**
@@ -65,5 +94,27 @@ class Assertion
     public function getFile()
     {
         return $this->file;
+    }
+
+    public function getFilePath()
+    {
+        return $this->filePath;
+    }
+
+    public function assert(\DOMElement $response)
+    {
+        switch ($this->type) {
+            case self::TYPE_EQUALS:
+                foreach ($response->childNodes as $child) {
+                    if ($child->getAttribute('name') === $this->getLeft()) {
+                        $this->result = $child->nodeValue == $this->getRight();
+                    }
+                }
+                break;
+
+            case self::TYPE_FILE_EXISTS;
+                $this->result = (bool) $response->firstChild->nodeValue;
+                break;
+        }
     }
 }
