@@ -3,12 +3,26 @@ declare(strict_types=1);
 
 namespace JDWil\Unify\Debugger;
 
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Exception\XdebugException;
 use React\EventLoop\Factory;
+use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\Server;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
 
+/**
+ * Class DebugSession
+ */
 class DebugSession
 {
+    const MODE_INITIALIZE = 0;
+    const MODE_RUNNING = 1;
+    const MODE_ASSERTING = 2;
+    const MODE_POSTMORTEM = 3;
+    const MODE_STOPPED = 4;
+
     private static $FLAGS = [
         'xdebug.remote_connect_back' => '1',
         'xdebug.profiler_enable' => '1',
@@ -17,113 +31,242 @@ class DebugSession
         'xdebug.remote_autostart' => 'true',
     ];
 
+    /**
+     * @var OutputInterface
+     */
+    private $output;
+
+    /**
+     * @var LoopInterface
+     */
     private $loop;
+
+    /**
+     * @var string
+     */
     private $host;
+
+    /**
+     * @var int
+     */
     private $port;
+
+    /**
+     * @var int
+     */
     private $transaction;
+
+    /**
+     * @var bool
+     */
     private $debuggerStopped;
 
     /**
-     * @var DebugStep[]
+     * @var int
      */
-    private $stack;
+    private $mode;
 
     /**
-     * @var DebugPlan
+     * @var array
      */
-    private $debugPlan;
+    private $initializationCommands;
 
-    public function __construct(string $host, int $port)
+    /**
+     * @var AssertionInterface[]
+     */
+    private $assertions;
+
+    /**
+     * @var AssertionInterface[]
+     */
+    private $assertionQueue;
+
+    /**
+     * DebugSession constructor.
+     * @param string $host
+     * @param int $port
+     * @param OutputInterface $output
+     * @internal param bool $debugOutput
+     */
+    public function __construct(string $host, int $port, OutputInterface $output)
     {
         $this->host = $host;
         $this->port = $port;
+        $this->output = $output;
         $this->transaction = 1;
         $this->debuggerStopped = false;
-        $this->stack = [];
+        $this->assertionQueue = [];
         $this->loop = Factory::create();
+        $this->mode = self::MODE_INITIALIZE;
+
+        $this->initializationCommands = [
+            "feature_set -i %d -n show_hidden -v 1\0",
+            "feature_set -i %d -n max_children -v 100\0",
+            //"feature_set -i %d -n extended_properties -v 1\0",
+            "step_into -i %d\0",
+        ];
     }
 
-    public function debugFile(string $filePath, array $assertions)
+    /**
+     * @param string $filePath
+     * @param array $assertions
+     * @return AssertionInterface[]
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \JDWil\Unify\Exception\XdebugException
+     */
+    public function debugFile(string $filePath, array $assertions): array
     {
-        $this->debugPlan = new DebugPlan($assertions);
+        $this->assertions = $assertions;
 
         $socket = new Server(sprintf('%s:%d', $this->host, $this->port), $this->loop);
         $socket->on('connection', function (ConnectionInterface $connection) {
             $connection->on('data', function ($data) use ($connection) {
                 list ($length, $xml) = explode("\0", $data);
-                echo $xml . "\n";
-                $this->debug(simplexml_load_string($xml), $connection);
+                if ($this->output->isDebug()) {
+                    $this->output->writeln($xml);
+                }
+                $document = new \DOMDocument();
+                $document->loadXML($xml);
+                $this->debug($document->documentElement, $connection);
             });
         });
 
         $this->loop->addTimer(0.1, function () use ($filePath) {
             $command = $this->buildRunCommand($filePath);
-            if (0 === pcntl_fork()) {
-                `$command`;
-                exit(0);
-            }
+            $process = new Process($command);
+            $process->start();
         });
 
         $this->loop->run();
 
-        return $this->debugPlan;
+        return $this->assertions;
     }
 
-    public function debugCode(string $code)
+    /**
+     * @param \DOMElement $response
+     * @param ConnectionInterface $connection
+     * @throws \JDWil\Unify\Exception\XdebugException
+     */
+    private function debug(\DOMElement $response, ConnectionInterface $connection)
     {
+        $this->handleError($response);
 
-    }
-
-    private function debug(\SimpleXMLElement $response, ConnectionInterface $connection)
-    {
-        if ((string) $response->attributes()->status === 'stopping') {
+        if ($response->getAttribute('status') === 'stopping') {
             $this->debuggerStopped = true;
+            $this->mode = self::MODE_POSTMORTEM;
         }
 
-        if (!empty($this->stack)) {
-            $step = array_pop($this->stack);
+        switch ($this->mode) {
+            case self::MODE_INITIALIZE:
+                $command = array_shift($this->initializationCommands);
+                if (empty($this->initializationCommands)) {
+                    $this->mode = self::MODE_RUNNING;
+                }
 
-            switch ($step->getType()) {
-                case DebugStep::TYPE_GET_VALUE:
-                    foreach ($response->children() as $child) {
-                        if ($child->attributes()->name == $step->getVariable()) {
-                            $step->setValue((string) $child);
-                        }
+                $this->send($connection, $command);
+                break;
+
+            case self::MODE_RUNNING:
+                $line = (int) $response->firstChild->getAttribute('lineno');
+                $assertions = $this->getAssertionsForLine($line);
+                if (!empty($assertions)) {
+                    $this->assertionQueue = $assertions;
+                    $this->mode = self::MODE_ASSERTING;
+                    $this->send($connection, $this->assertionQueue[0]->getDebuggerCommand());
+                }
+
+                if ($this->mode === self::MODE_RUNNING) {
+                    $this->send($connection, "step_over -i %d\0");
+                }
+                break;
+
+            case self::MODE_ASSERTING:
+                $assertion = array_shift($this->assertionQueue);
+                $assertion->assert($response);
+
+                if (empty($this->assertionQueue)) {
+                    if ($this->debuggerStopped) {
+                        $this->stop($connection);
+                    } else {
+                        $this->mode = self::MODE_RUNNING;
+                        $this->send($connection, "step_over -i %d\0");
                     }
-                    break;
+                } else {
+                    $this->send($connection, $this->assertionQueue[0]->getDebuggerCommand());
+                }
+                break;
+
+            case self::MODE_POSTMORTEM:
+                $assertions = $this->getAssertionsForLine(0);
+                if (!empty($assertions)) {
+                    $this->assertionQueue = $assertions;
+                    $this->mode = self::MODE_ASSERTING;
+                    $this->send($connection, $this->assertionQueue[0]->getDebuggerCommand());
+                } else {
+                    $this->stop($connection);
+                }
+                break;
+
+            case self::MODE_STOPPED:
+                $this->stop($connection);
+                break;
+        }
+    }
+
+    /**
+     * @param \DOMElement $response
+     * @throws XdebugException
+     */
+    private function handleError(\DOMElement $response)
+    {
+        if ($response->firstChild && $response->firstChild->localName === 'error') {
+            throw new XdebugException($response->firstChild->firstChild->nodeValue);
+        }
+    }
+
+    /**
+     * @param ConnectionInterface $connection
+     */
+    private function stop(ConnectionInterface $connection)
+    {
+        $connection->close();
+        $this->loop->stop();
+    }
+
+    /**
+     * @param int $line
+     * @return array
+     */
+    private function getAssertionsForLine(int $line)
+    {
+        $ret = [];
+
+        foreach ($this->assertions as $assertion) {
+            if ($assertion->getLine() === $line) {
+                $ret[] = $assertion;
             }
         }
 
-        do {
-            $step = $this->debugPlan->nextStep();
-        } while ($step && $this->debuggerStopped && $step->getType() === DebugStep::TYPE_COMMAND);
-
-        if (!$step) {
-            $connection->close();
-            $this->loop->stop();
-            return;
-        }
-
-        switch ($step->getType()) {
-            case DebugStep::TYPE_COMMAND:
-                echo "  " . sprintf($step->getCommand(), $this->transaction) . "\n";
-                $connection->write(sprintf($step->getCommand(), $this->transaction++));
-                break;
-
-            case DebugStep::TYPE_GET_VALUE:
-                $this->stack[] = $step;
-                echo sprintf("  context_get -i %d -d 0 -c 0\n", $this->transaction);
-                $connection->write(sprintf("context_get -i %d -d 0 -c 0\0", $this->transaction++));
-                break;
-        }
-
-        if ($this->debugPlan->isComplete()) {
-            echo "DONE!!!\n";
-            $connection->close();
-            $this->loop->stop();
-        }
+        return $ret;
     }
 
+    /**
+     * @param ConnectionInterface $connection
+     * @param $command
+     */
+    private function send(ConnectionInterface $connection, $command)
+    {
+        if ($this->output->isDebug()) {
+            $this->output->writeln(sprintf("  %s\n", sprintf($command, $this->transaction)));
+        }
+        $connection->write(sprintf($command, $this->transaction++));
+    }
+
+    /**
+     * @param string $filePath
+     * @return string
+     */
     private function buildRunCommand(string $filePath)
     {
         $command = 'php';
