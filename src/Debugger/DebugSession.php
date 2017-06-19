@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace JDWil\Unify\Debugger;
 
 use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\AssertionQueue;
 use JDWil\Unify\Exception\XdebugException;
 use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
@@ -72,12 +73,12 @@ class DebugSession
     private $initializationCommands;
 
     /**
-     * @var AssertionInterface[]
+     * @var AssertionQueue
      */
     private $assertions;
 
     /**
-     * @var AssertionInterface[]
+     * @var AssertionQueue
      */
     private $assertionQueue;
 
@@ -95,7 +96,6 @@ class DebugSession
         $this->output = $output;
         $this->transaction = 1;
         $this->debuggerStopped = false;
-        $this->assertionQueue = [];
         $this->loop = Factory::create();
         $this->mode = self::MODE_INITIALIZE;
 
@@ -109,13 +109,13 @@ class DebugSession
 
     /**
      * @param string $filePath
-     * @param array $assertions
-     * @return AssertionInterface[]
+     * @param AssertionQueue $assertions
+     * @return AssertionQueue
      * @throws \Symfony\Component\Process\Exception\LogicException
      * @throws \Symfony\Component\Process\Exception\RuntimeException
      * @throws \JDWil\Unify\Exception\XdebugException
      */
-    public function debugFile(string $filePath, array $assertions): array
+    public function debugFile(string $filePath, AssertionQueue $assertions)
     {
         $this->assertions = $assertions;
 
@@ -132,7 +132,7 @@ class DebugSession
             });
         });
 
-        $this->loop->addTimer(0.1, function () use ($filePath) {
+        $this->loop->addTimer(0.001, function () use ($filePath) {
             $command = $this->buildRunCommand($filePath);
             $process = new Process($command);
             $process->start();
@@ -169,11 +169,11 @@ class DebugSession
 
             case self::MODE_RUNNING:
                 $line = (int) $response->firstChild->getAttribute('lineno');
-                $assertions = $this->getAssertionsForLine($line);
-                if (!empty($assertions)) {
+                $assertions = $this->assertions->findByLine($line);
+                if (!$assertions->empty()) {
                     $this->assertionQueue = $assertions;
                     $this->mode = self::MODE_ASSERTING;
-                    $this->send($connection, $this->assertionQueue[0]->getDebuggerCommand());
+                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
                 }
 
                 if ($this->mode === self::MODE_RUNNING) {
@@ -182,10 +182,10 @@ class DebugSession
                 break;
 
             case self::MODE_ASSERTING:
-                $assertion = array_shift($this->assertionQueue);
+                $assertion = $this->assertionQueue->next();
                 $assertion->assert($response);
 
-                if (empty($this->assertionQueue)) {
+                if ($this->assertionQueue->empty()) {
                     if ($this->debuggerStopped) {
                         $this->stop($connection);
                     } else {
@@ -193,16 +193,16 @@ class DebugSession
                         $this->send($connection, "step_over -i %d\0");
                     }
                 } else {
-                    $this->send($connection, $this->assertionQueue[0]->getDebuggerCommand());
+                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
                 }
                 break;
 
             case self::MODE_POSTMORTEM:
-                $assertions = $this->getAssertionsForLine(0);
-                if (!empty($assertions)) {
+                $assertions = $this->assertionQueue->findByLine(0);
+                if (!$assertions->empty()) {
                     $this->assertionQueue = $assertions;
                     $this->mode = self::MODE_ASSERTING;
-                    $this->send($connection, $this->assertionQueue[0]->getDebuggerCommand());
+                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
                 } else {
                     $this->stop($connection);
                 }
@@ -232,23 +232,6 @@ class DebugSession
     {
         $connection->close();
         $this->loop->stop();
-    }
-
-    /**
-     * @param int $line
-     * @return array
-     */
-    private function getAssertionsForLine(int $line)
-    {
-        $ret = [];
-
-        foreach ($this->assertions as $assertion) {
-            if ($assertion->getLine() === $line) {
-                $ret[] = $assertion;
-            }
-        }
-
-        return $ret;
     }
 
     /**

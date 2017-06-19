@@ -6,7 +6,7 @@ namespace JDWil\Unify\Assertion;
 /**
  * Class AssertEqual
  */
-class AssertEqual implements AssertionInterface
+class AssertEqual extends AbstractAssertion
 {
     /**
      * @var string
@@ -19,21 +19,6 @@ class AssertEqual implements AssertionInterface
     private $value;
 
     /**
-     * @var int
-     */
-    private $line;
-
-    /**
-     * @var string
-     */
-    private $file;
-
-    /**
-     * @var bool
-     */
-    private $result;
-
-    /**
      * AssertEqual constructor.
      * @param string $variable
      * @param $value
@@ -44,8 +29,8 @@ class AssertEqual implements AssertionInterface
     {
         $this->variable = $variable;
         $this->value = $value;
-        $this->line = $line;
-        $this->file = $file;
+
+        parent::__construct($line, $file);
     }
 
     /**
@@ -69,29 +54,5 @@ class AssertEqual implements AssertionInterface
                 $this->result = $child->nodeValue == $this->value;
             }
         }
-    }
-
-    /**
-     * @return int
-     */
-    public function getLine()
-    {
-        return $this->line;
-    }
-
-    /**
-     * @return string
-     */
-    public function getFile()
-    {
-        return $this->file;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPass()
-    {
-        return $this->result;
     }
 }
