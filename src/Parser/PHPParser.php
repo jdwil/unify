@@ -5,6 +5,7 @@ namespace JDWil\Unify\Parser;
 use JDWil\Unify\Assertion\AssertionQueue;
 use JDWil\Unify\Assertion\Context;
 use JDWil\Unify\Assertion\Pipeline;
+use JDWil\Unify\TestRunner\TestPlan;
 
 class PHPParser
 {
@@ -18,29 +19,53 @@ class PHPParser
 
     private $pipeline;
 
+    private $filePath;
+
     /**
      * @var Context
      */
     private $context;
 
+    /**
+     * @var int
+     */
+    private $lastAssertionLine;
+
     public function __construct($filePath, Pipeline $pipeline)
     {
+        $this->filePath = $filePath;
+        $this->lastAssertionLine = 0;
         $this->context = new Context();
         $this->context->setFile($filePath);
         $this->assertions = new AssertionQueue();
         $this->pipeline = $pipeline;
     }
 
-    public function parse()
+    public function parse($code = null)
     {
-        // @todo use filesystem
-        $this->lines = file($this->context->getFile());
+        if (null === $code) {
+            // @todo use finder
+            $this->lines = file($this->context->getFile());
+        } else {
+            $this->lines = explode("\n", $code);
+            array_walk($this->lines, function (&$line, $index) {
+                $line = sprintf("%s\n", $line);
+            });
+        }
 
-        // @todo use chain of responsibility. Create a pipeline where parsers can be registered.
         for ($endLine = count($this->lines), $this->lineNumber = 0; $this->lineNumber < $endLine; $this->lineNumber++) {
             $this->line = trim($this->lines[$this->lineNumber]);
+            $this->collectUseStatements();
             $this->processSingleLineComment();
+            $this->processInlineComment();
         }
+    }
+
+    public function getTestPlans()
+    {
+        return [
+            new TestPlan($this->filePath, $this->assertions)
+        ];
     }
 
     public function getAssertions()
@@ -63,13 +88,56 @@ class PHPParser
         $this->context->setLine($this->nextStatementLine($this->lineNumber + 2));
 
         if ($assertion = $this->pipeline->handleLine($this->line, $this->context)) {
+            $assertion->setCodeContext(
+                implode('', array_slice(
+                    $this->lines,
+                    $this->lastAssertionLine,
+                    $this->lineNumber + 2 - $this->lastAssertionLine
+                ))
+            );
+            $assertion->setContext($this->context);
+            $this->lastAssertionLine = $this->lineNumber + 2;
+            $this->context->resetCodeContext();
+            $this->assertions->add($assertion);
+        }
+    }
+
+    protected function processInlineComment()
+    {
+        if (preg_match('~.+//(.*)$~', $this->line, $m) ||
+            preg_match('~.+#(.*)$~', $this->line, $m) ||
+            preg_match('~.+/\*(.*)\*/~U', $this->line, $m)) {
+            $this->line = trim($m[1]);
+        } else {
+            return false;
+        }
+
+        $this->context->setAssignmentVariable($this->getAssignedVariableFromLine($this->lineNumber));
+        $this->context->setLine($this->nextStatementLine($this->lineNumber + 1));
+
+        if ($assertion = $this->pipeline->handleLine($this->line, $this->context)) {
+            $assertion->setCodeContext(
+                implode('', array_slice(
+                    $this->lines,
+                    $this->lastAssertionLine,
+                    $this->lineNumber + 1 - $this->lastAssertionLine
+                ))
+            );
+            $assertion->setContext($this->context);
+            $this->lastAssertionLine = $this->lineNumber + 1;
+            $this->context->resetCodeContext();
             $this->assertions->add($assertion);
         }
     }
 
     protected function getAssignedVariableFromNextLine()
     {
-        $line = trim($this->lines[$this->lineNumber + 1]);
+        return $this->getAssignedVariableFromLine($this->lineNumber + 1);
+    }
+
+    protected function getAssignedVariableFromLine($line)
+    {
+        $line = trim($this->lines[$line]);
         if (!preg_match('/(\$[a-zA-Z]\w*)\s*=[^=]/', $line, $m)) {
             return null;
         }
@@ -86,8 +154,7 @@ class PHPParser
                 strpos($line, '//') === 0 ||
                 strpos($line, '*') === 0 ||
                 strpos($line, '/*') === 0 ||
-                strpos($line, '#') === 0 ||
-                !preg_match('/;$/', $line)
+                strpos($line, '#') === 0
             ) {
                 continue;
             }
@@ -96,5 +163,12 @@ class PHPParser
         }
 
         return 0;
+    }
+
+    protected function collectUseStatements()
+    {
+        if (preg_match('~use [^;]+;~', $this->line, $m)) {
+            $this->context->addUseStatement($m[0]);
+        }
     }
 }

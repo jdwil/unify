@@ -20,6 +20,11 @@ class AssertEqual extends AbstractAssertion
     private $value;
 
     /**
+     * @var mixed
+     */
+    private $internalValue;
+
+    /**
      * AssertEqual constructor.
      * @param string $variable
      * @param $value
@@ -37,23 +42,59 @@ class AssertEqual extends AbstractAssertion
     /**
      * The returned command must contain "-i %d"
      *
-     * @return string
+     * @return array
      */
-    public function getDebuggerCommand()
+    public function getDebuggerCommands()
     {
-        return "context_get -i %d -d 0 -c 0\0";
+        $ret = ["context_get -i %d -d 0 -c 0\0"];
+
+        echo sprintf('%s %s;', implode(' ', $this->context->getUseStatements()), $this->value);
+
+        if ($this->valueNeedsEvaluation()) {
+            $ret[] = sprintf(
+                "eval -i %%d -- %s\0",
+                base64_encode(sprintf('%s %s;', implode(' ', $this->context->getUseStatements()), $this->value))
+            );
+        }
+
+        return $ret;
     }
 
     /**
      * @param \DOMElement $response
+     * @param int $responseNumber
      */
-    public function assert(\DOMElement $response)
+    public function assert(\DOMElement $response, $responseNumber = 1)
     {
-        /** @var \DOMElement $child */
-        foreach ($response->childNodes as $child) {
-            if ($child->getAttribute('name') === $this->variable) {
-                $this->result = $child->nodeValue == $this->value;
+        if ($responseNumber === 1) {
+            /** @var \DOMElement $child */
+            foreach ($response->childNodes as $child) {
+                if ($child->getAttribute('name') === $this->variable) {
+                    if ($this->valueNeedsEvaluation()) {
+                        $this->internalValue = $child->nodeValue;
+                    } else {
+                        $this->result = $child->nodeValue == $this->value;
+                    }
+                }
             }
+        } else {
+
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Assert %s equals %s.', $this->variable, (string) $this->value);
+    }
+
+    /**
+     * @return bool
+     */
+    private function valueNeedsEvaluation()
+    {
+        return strpos($this->value, '::') !== false;
     }
 }

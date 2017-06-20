@@ -1,6 +1,7 @@
 parameters:
     xdebug.host: "127.0.0.1"
     xdebug.port: 9000
+    autoload_path: ~
 
 services:
 
@@ -24,8 +25,14 @@ services:
         arguments:
             - "@file_type_checker"
             - "@pipeline"
+            - "%autoload_path%"
 
     pipeline:
         factory: ['JDWil\Unify\Assertion\PipelineFactory', create]
         arguments:
             - "@finder"
+
+    test_runner_factory:
+        class: JDWil\Unify\TestRunner\TestRunnerFactory
+        arguments:
+            - "@debug_session_factory"

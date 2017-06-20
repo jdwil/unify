@@ -6,6 +6,7 @@ namespace JDWil\Unify\Command;
 use JDWil\Unify\Debugger\DebugSession;
 use JDWil\Unify\Parser\FileTypeChecker;
 use JDWil\Unify\Parser\ParserFactory;
+use JDWil\Unify\TestRunner\TestPlan;
 use JDWil\Unify\TestRunner\TestRunner;
 use JDWil\Unify\Trace\TraceParser;
 use JDWil\Unify\Validation\Validator;
@@ -34,10 +35,15 @@ class RunCommand extends AbstractUnifyCommand
             $factory = $this->getContainer()->get('parser_factory');
             $parser = $factory->createParser($file);
             $parser->parse();
+            $testPlans = $parser->getTestPlans();
 
-            $session = new DebugSession('127.0.0.1', 9000, $output);
-            $assertions = $session->debugFile($file, $parser->getAssertions());
-            print_r($assertions);
+            $testRunner = $this->getContainer()->get('test_runner_factory')->create($output);
+            foreach ($testPlans as $testPlan) {
+                $testRunner->addTestPlan($testPlan);
+            }
+            $testRunner->execute();
+
+            exit($testRunner->statusCode());
         }
     }
 }

@@ -8,7 +8,6 @@ use JDWil\Unify\DependencyInjection\ContainerFactory;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $container = ContainerFactory::buildContainer();
-$container->setParameter('root_dir', dirname(__DIR__));
 
 $application = new Application();
 

@@ -5,6 +5,7 @@ namespace JDWil\Unify\Debugger;
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\AssertionQueue;
 use JDWil\Unify\Exception\XdebugException;
+use JDWil\Unify\TestRunner\TestPlan;
 use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
@@ -82,6 +83,21 @@ class DebugSession
     private $assertionQueue;
 
     /**
+     * @var Server
+     */
+    private $socket;
+
+    /**
+     * @var array
+     */
+    private $commandStack;
+
+    /**
+     * @var int
+     */
+    private $currentAssertionNumber;
+
+    /**
      * DebugSession constructor.
      * @param string $host
      * @param int $port
@@ -107,19 +123,30 @@ class DebugSession
     }
 
     /**
-     * @param string $filePath
-     * @param AssertionQueue $assertions
+     * @param TestPlan $testPlan
      * @return AssertionQueue
-     * @throws \Symfony\Component\Process\Exception\LogicException
-     * @throws \Symfony\Component\Process\Exception\RuntimeException
-     * @throws \JDWil\Unify\Exception\XdebugException
+     * @throws \Exception
      */
-    public function debugFile($filePath, AssertionQueue $assertions)
+    public function debugPhp(TestPlan $testPlan)
     {
-        $this->assertions = $assertions;
+        $this->assertions = $testPlan->getAssertionQueue();
 
-        $socket = new Server(sprintf('%s:%d', $this->host, $this->port), $this->loop);
-        $socket->on('connection', function (ConnectionInterface $connection) {
+        $attempts = 100;
+        do {
+            try {
+                $this->socket = new Server(sprintf('%s:%d', $this->host, $this->port), $this->loop);
+                $retry = false;
+            } catch (\Exception $e) {
+                $attempts--;
+                if (!$attempts) {
+                    throw $e;
+                }
+                $retry = true;
+                usleep(100);
+            }
+        } while ($retry);
+
+        $this->socket->on('connection', function (ConnectionInterface $connection) {
             $connection->on('data', function ($data) use ($connection) {
                 list ($length, $xml) = explode("\0", $data);
                 if ($this->output->isDebug()) {
@@ -131,8 +158,8 @@ class DebugSession
             });
         });
 
-        $this->loop->addTimer(0.001, function () use ($filePath) {
-            $command = $this->buildRunCommand($filePath);
+        $this->loop->addTimer(0.001, function () use ($testPlan) {
+            $command = $this->buildRunCommand($testPlan);
             $process = new Process($command);
             $process->start();
         });
@@ -172,7 +199,9 @@ class DebugSession
                 if (!$assertions->isEmpty()) {
                     $this->assertionQueue = $assertions;
                     $this->mode = self::MODE_ASSERTING;
-                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
+                    $this->commandStack = $this->assertionQueue->current()->getDebuggerCommands();
+                    $this->currentAssertionNumber = 1;
+                    $this->send($connection, array_shift($this->commandStack));
                 }
 
                 if ($this->mode === self::MODE_RUNNING) {
@@ -181,8 +210,18 @@ class DebugSession
                 break;
 
             case self::MODE_ASSERTING:
-                $assertion = $this->assertionQueue->next();
-                $assertion->assert($response);
+                $assertion = $this->assertionQueue->current();
+                $assertion->assert($response, $this->currentAssertionNumber);
+
+                if (!empty($this->commandStack)) {
+                    $this->currentAssertionNumber++;
+                    $this->send($connection, array_shift($this->commandStack));
+                    break;
+                } else {
+                    $this->assertionQueue->next();
+                }
+
+                $this->outputAssertionResult($assertion);
 
                 if ($this->assertionQueue->isEmpty()) {
                     if ($this->debuggerStopped) {
@@ -192,16 +231,20 @@ class DebugSession
                         $this->send($connection, "step_over -i %d\0");
                     }
                 } else {
-                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
+                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
                 }
                 break;
 
             case self::MODE_POSTMORTEM:
-                $assertions = $this->assertionQueue->findByLine(0);
-                if (!$assertions->isEmpty()) {
-                    $this->assertionQueue = $assertions;
-                    $this->mode = self::MODE_ASSERTING;
-                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
+                if (null !== $this->assertionQueue) {
+                    $assertions = $this->assertionQueue->findByLine(0);
+                    if (!$assertions->isEmpty()) {
+                        $this->assertionQueue = $assertions;
+                        $this->mode = self::MODE_ASSERTING;
+                        $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
+                    } else {
+                        $this->stop($connection);
+                    }
                 } else {
                     $this->stop($connection);
                 }
@@ -210,6 +253,36 @@ class DebugSession
             case self::MODE_STOPPED:
                 $this->stop($connection);
                 break;
+        }
+    }
+
+    private function outputAssertionResult(AssertionInterface $assertion)
+    {
+        switch ($this->output->getVerbosity()) {
+            case OutputInterface::VERBOSITY_QUIET:
+            case OutputInterface::VERBOSITY_NORMAL:
+                return;
+
+            case OutputInterface::VERBOSITY_VERBOSE:
+                if ($assertion->isPass()) {
+                    $this->output->write('.');
+                } else {
+                    $this->output->write('E');
+                }
+                break;
+
+            case OutputInterface::VERBOSITY_VERY_VERBOSE:
+                $this->output->writeln($assertion->getCodeContext());
+                if ($assertion->isPass()) {
+                    $this->output->writeln(sprintf('%s... PASS', (string) $assertion));
+                } else {
+                    $this->output->writeln(sprintf('%s... FAIL', (string) $assertion));
+                }
+                $this->output->writeln('');
+                break;
+
+            case OutputInterface::VERBOSITY_DEBUG:
+                return;
         }
     }
 
@@ -230,6 +303,7 @@ class DebugSession
     private function stop(ConnectionInterface $connection)
     {
         $connection->close();
+        $this->socket->close();
         $this->loop->stop();
     }
 
@@ -246,19 +320,30 @@ class DebugSession
     }
 
     /**
-     * @param string $filePath
+     * @param TestPlan $testPlan
      * @return string
      */
-    private function buildRunCommand($filePath)
+    private function buildRunCommand(TestPlan $testPlan)
     {
-        $command = 'php';
-        foreach (self::$FLAGS as $flag => $value) {
-            $command = sprintf('%s -d %s=%s', $command, $flag, $value);
-        }
+        if (null === $testPlan->getSource()) {
+            $command = 'php';
+            foreach (self::$FLAGS as $flag => $value) {
+                $command = sprintf('%s -d %s=%s', $command, $flag, $value);
+            }
 
-        $command = sprintf('%s -d xdebug.remote_host="%s"', $command, $this->host);
-        $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
-        $command = sprintf('%s %s &', $command, $filePath);
+            $command = sprintf('%s -d xdebug.remote_host="%s"', $command, $this->host);
+            $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
+            $command = sprintf('%s %s &', $command, $testPlan->getFile());
+        } else {
+            $command = sprintf('echo %s | php', escapeshellarg($testPlan->getSource()));
+            foreach (self::$FLAGS as $flag => $value) {
+                $command = sprintf('%s -d %s=%s', $command, $flag, $value);
+            }
+
+            $command = sprintf('%s -d xdebug.remote_host="%s"', $command, $this->host);
+            $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
+            $command = sprintf('%s &', $command);
+        }
 
         return $command;
     }

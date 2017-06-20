@@ -26,6 +26,7 @@ class Configuration implements ConfigurationInterface
                         ->integerNode('port')->defaultValue(9000)->end()
                     ->end()
                 ->end() // xdebug
+                ->scalarNode('autoload_path')->end()
             ->end()
         ;
 

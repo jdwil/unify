@@ -3,6 +3,7 @@
 namespace JDWil\Unify\Command;
 
 use JDWil\Unify\DependencyInjection\Configuration;
+use JDWil\Unify\Exception\ConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
@@ -91,5 +92,33 @@ abstract class AbstractUnifyCommand extends Command implements ContainerAwareInt
         $this->parseConfig($input);
         $this->container->setParameter('xdebug.host', $this->config['xdebug']['host']);
         $this->container->setParameter('xdebug.port', $this->config['xdebug']['port']);
+
+        // @todo revisit this. The paths here can get messed up when not running from the root dir.
+        if (isset($this->config['autoload_path'])) {
+            $this->container->setParameter('autoload_path', realpath($this->config['autoload_path']));
+        } else {
+            $this->findRootDirectory();
+        }
+    }
+
+    protected function findRootDirectory()
+    {
+        $found = true;
+        $filesystem = $this->getContainer()->get('filesystem');
+        $directory = __DIR__ .'/../..';
+        while (!$filesystem->exists(sprintf('%s/vendor/autoload.php', $directory))) {
+            echo "Not in " . sprintf("%s/composer.json\n", $directory);
+            $directory = sprintf('%s/..', $directory);
+            if (realpath($directory) == '/') {
+                $found = false;
+                break;
+            }
+        }
+
+        if ($found) {
+            $this->container->setParameter('autoload_path', sprintf('%s/vendor/autoload.php', realpath($directory)));
+        } else {
+            throw new ConfigurationException('Could not locate autoload.php');
+        }
     }
 }

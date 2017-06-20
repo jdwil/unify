@@ -8,16 +8,17 @@ namespace JDWil\Unify\Assertion;
 interface AssertionInterface
 {
     /**
-     * The returned command must contain "-i %d"
+     * The returned commands must contain "-i %d"
      *
-     * @return string
+     * @return []
      */
-    public function getDebuggerCommand();
+    public function getDebuggerCommands();
 
     /**
      * @param \DOMElement $response
+     * @param int $responseNumber
      */
-    public function assert(\DOMElement $response);
+    public function assert(\DOMElement $response, $responseNumber = 1);
 
     /**
      * @return int
@@ -33,4 +34,24 @@ interface AssertionInterface
      * @return bool
      */
     public function isPass();
+
+    /**
+     * @return string
+     */
+    public function getCodeContext();
+
+    /**
+     * @param $code
+     */
+    public function setCodeContext($code);
+
+    /**
+     * @param Context $context
+     */
+    public function setContext(Context $context);
+
+    /**
+     * @return string
+     */
+    public function __toString();
 }

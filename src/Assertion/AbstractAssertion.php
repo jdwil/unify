@@ -21,6 +21,16 @@ abstract class AbstractAssertion implements AssertionInterface
     protected $result;
 
     /**
+     * @var string
+     */
+    protected $codeContext;
+
+    /**
+     * @var Context
+     */
+    protected $context;
+
+    /**
      * AbstractAssertion constructor.
      * @param int $line
      * @param string $file
@@ -29,6 +39,7 @@ abstract class AbstractAssertion implements AssertionInterface
     {
         $this->line = $line;
         $this->file = $file;
+        $this->codeContext = '';
     }
 
     /**
@@ -54,5 +65,29 @@ abstract class AbstractAssertion implements AssertionInterface
     public function isPass()
     {
         return $this->result;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCodeContext()
+    {
+        return $this->codeContext;
+    }
+
+    /**
+     * @param $code
+     */
+    public function setCodeContext($code)
+    {
+        $this->codeContext = $code;
+    }
+
+    /**
+     * @param Context $context
+     */
+    public function setContext(Context $context)
+    {
+        $this->context = $context;
     }
 }

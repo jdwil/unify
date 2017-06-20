@@ -30,23 +30,34 @@ class AssertFileNotExists extends AbstractAssertion
     /**
      * The returned command must contain "-i %d"
      *
-     * @return string
+     * @return array
      */
-    public function getDebuggerCommand()
+    public function getDebuggerCommands()
     {
-        return sprintf(
-            "eval -i %%d -- %s\0",
-            base64_encode(
-                sprintf('!file_exists(\'%s\');', $this->filePath)
+        return [
+            sprintf(
+                "eval -i %%d -- %s\0",
+                base64_encode(
+                    sprintf('!file_exists(\'%s\');', $this->filePath)
+                )
             )
-        );
+        ];
     }
 
     /**
      * @param \DOMElement $response
+     * @param int $responseNumber
      */
-    public function assert(\DOMElement $response)
+    public function assert(\DOMElement $response, $responseNumber = 1)
     {
         $this->result = (bool) $response->firstChild->nodeValue;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Assert "%s" does not exist.', $this->filePath);
     }
 }
