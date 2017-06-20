@@ -1,7 +1,8 @@
 <?php
-declare(strict_types=1);
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\Assertion\Core\AssertFileExists;
+
+use JDWil\Unify\Assertion\AbstractAssertion;
 
 /**
  * Class AssertFileExists
@@ -19,7 +20,7 @@ class AssertFileExists extends AbstractAssertion
      * @param int $line
      * @param string $file
      */
-    public function __construct(string $filePath, int $line, string $file)
+    public function __construct($filePath, $line, $file)
     {
         $this->filePath = $filePath;
 

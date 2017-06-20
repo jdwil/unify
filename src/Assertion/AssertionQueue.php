@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace JDWil\Unify\Assertion;
 
@@ -24,7 +23,7 @@ class AssertionQueue
     /**
      * @return bool
      */
-    public function empty()
+    public function isEmpty()
     {
         return empty($this->assertions);
     }
@@ -65,7 +64,7 @@ class AssertionQueue
      * @param int $line
      * @return AssertionQueue
      */
-    public function findByLine(int $line)
+    public function findByLine($line)
     {
         $ret = new AssertionQueue();
         foreach ($this->assertions as $assertion) {

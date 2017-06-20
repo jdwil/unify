@@ -1,7 +1,8 @@
 <?php
-declare(strict_types=1);
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\Assertion\Core\AssertEqual;
+
+use JDWil\Unify\Assertion\AbstractAssertion;
 
 /**
  * Class AssertEqual
@@ -25,7 +26,7 @@ class AssertEqual extends AbstractAssertion
      * @param int $line
      * @param string $file
      */
-    public function __construct(string $variable, $value, int $line, string $file)
+    public function __construct($variable, $value, $line, $file)
     {
         $this->variable = $variable;
         $this->value = $value;

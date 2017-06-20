@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace JDWil\Unify\Debugger;
 
@@ -89,7 +88,7 @@ class DebugSession
      * @param OutputInterface $output
      * @internal param bool $debugOutput
      */
-    public function __construct(string $host, int $port, OutputInterface $output)
+    public function __construct($host, $port, OutputInterface $output)
     {
         $this->host = $host;
         $this->port = $port;
@@ -115,7 +114,7 @@ class DebugSession
      * @throws \Symfony\Component\Process\Exception\RuntimeException
      * @throws \JDWil\Unify\Exception\XdebugException
      */
-    public function debugFile(string $filePath, AssertionQueue $assertions)
+    public function debugFile($filePath, AssertionQueue $assertions)
     {
         $this->assertions = $assertions;
 
@@ -170,7 +169,7 @@ class DebugSession
             case self::MODE_RUNNING:
                 $line = (int) $response->firstChild->getAttribute('lineno');
                 $assertions = $this->assertions->findByLine($line);
-                if (!$assertions->empty()) {
+                if (!$assertions->isEmpty()) {
                     $this->assertionQueue = $assertions;
                     $this->mode = self::MODE_ASSERTING;
                     $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
@@ -185,7 +184,7 @@ class DebugSession
                 $assertion = $this->assertionQueue->next();
                 $assertion->assert($response);
 
-                if ($this->assertionQueue->empty()) {
+                if ($this->assertionQueue->isEmpty()) {
                     if ($this->debuggerStopped) {
                         $this->stop($connection);
                     } else {
@@ -199,7 +198,7 @@ class DebugSession
 
             case self::MODE_POSTMORTEM:
                 $assertions = $this->assertionQueue->findByLine(0);
-                if (!$assertions->empty()) {
+                if (!$assertions->isEmpty()) {
                     $this->assertionQueue = $assertions;
                     $this->mode = self::MODE_ASSERTING;
                     $this->send($connection, $this->assertionQueue->current()->getDebuggerCommand());
@@ -250,7 +249,7 @@ class DebugSession
      * @param string $filePath
      * @return string
      */
-    private function buildRunCommand(string $filePath)
+    private function buildRunCommand($filePath)
     {
         $command = 'php';
         foreach (self::$FLAGS as $flag => $value) {

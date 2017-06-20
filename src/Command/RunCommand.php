@@ -14,11 +14,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class RunCommand extends Command
+class RunCommand extends AbstractUnifyCommand
 {
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('run')
             ->addArgument('file', InputArgument::OPTIONAL, 'File to test.')
@@ -29,8 +31,7 @@ class RunCommand extends Command
     {
         if ($file = $input->getArgument('file')) {
             $file = realpath($file);
-            $typeChecker = new FileTypeChecker();
-            $factory = new ParserFactory($typeChecker);
+            $factory = $this->getContainer()->get('parser_factory');
             $parser = $factory->createParser($file);
             $parser->parse();
 

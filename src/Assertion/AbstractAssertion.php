@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace JDWil\Unify\Assertion;
 
@@ -26,7 +25,7 @@ abstract class AbstractAssertion implements AssertionInterface
      * @param int $line
      * @param string $file
      */
-    public function __construct(int $line, string $file)
+    public function __construct($line, $file)
     {
         $this->line = $line;
         $this->file = $file;

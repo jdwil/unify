@@ -1,50 +1,38 @@
 <?php
-declare(strict_types=1);
 
 namespace JDWil\Unify\TestRunner;
 
-use Symfony\Component\Process\Process;
-
+/**
+ * Class TestRunner
+ */
 class TestRunner
 {
-    private static $FLAGS = [
-        'xdebug.trace_output_dir' => '/tmp',
-        'xdebug.trace_output_name' => 'unify.trace',
-        'xdebug.auto_trace' => 1,
-        'xdebug.trace_format' => 0,
-        'xdebug.collect_assignments' => 1,
-        'xdebug.collect_includes' => 1,
-        'xdebug.collect_params' => 4,
-        'xdebug.collect_return' => 1,
-        'xdebug.collect_vars' => 1
-    ];
+    /**
+     * @var TestPlan[]
+     */
+    private $testPlans;
 
-    public function run(string $filePath, array $assertions)
+    /**
+     * TestRunner constructor.
+     */
+    public function __construct()
     {
-        $assertionLookup = [];
-        /** @var Assertion $assertion */
-        foreach ($assertions as $assertion) {
-            if (!isset($assertionLookup[$assertion->getLine()])) {
-                $assertionLookup[$assertion->getLine()] = [];
-            }
-            $assertionLookup[$assertion->getLine()][] = $assertion;
-        }
-
-        $process = new Process($this->buildCommand($filePath));
-        $process->run();
-
-        return '/tmp/unify.trace.xt';
+        $this->testPlans = [];
     }
 
-    private function buildCommand(string $filePath)
+    /**
+     * @param TestPlan $testPlan
+     */
+    public function addTestPlan(TestPlan $testPlan)
     {
-        $command = 'php';
-        foreach (self::$FLAGS as $flag => $value) {
-            $command = sprintf('%s -d %s=%s', $command, $flag, (string) $value);
-        }
+        $this->testPlans[] = $testPlan;
+    }
 
-        $command = sprintf('%s %s', $command, $filePath);
-
-        return $command;
+    /**
+     * @return TestPlan[]
+     */
+    public function getTestPlans()
+    {
+        return $this->testPlans;
     }
 }

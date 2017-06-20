@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace JDWil\Unify\Parser;
 
@@ -7,7 +6,7 @@ class FileTypeChecker
 {
     const PHP = 0;
 
-    public function determineType(string $path)
+    public function determineType($path)
     {
         $type = mime_content_type($path);
 

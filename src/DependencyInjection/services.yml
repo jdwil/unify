@@ -1,0 +1,31 @@
+parameters:
+    xdebug.host: "127.0.0.1"
+    xdebug.port: 9000
+
+services:
+
+    debug_session_factory:
+        class: JDWil\Unify\Debugger\DebugSessionFactory
+        arguments:
+            - "%xdebug.host%"
+            - "%xdebug.port%"
+
+    file_type_checker:
+        class: JDWil\Unify\Parser\FileTypeChecker
+
+    filesystem:
+        class: Symfony\Component\Filesystem\Filesystem
+
+    finder:
+        factory: ['Symfony\Component\Finder\Finder', create]
+
+    parser_factory:
+        class: JDWil\Unify\Parser\ParserFactory
+        arguments:
+            - "@file_type_checker"
+            - "@pipeline"
+
+    pipeline:
+        factory: ['JDWil\Unify\Assertion\PipelineFactory', create]
+        arguments:
+            - "@finder"
