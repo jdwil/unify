@@ -18,15 +18,26 @@ class AssertFileExistsMatcher implements AssertionMatcherInterface
      */
     public function match($comment, Context $context)
     {
-        /**
-         * Assert a file exists
-         *
-         * // creates file /path/to/file.xyz
-         */
-        if (preg_match('/creates? file (\S+)/i', $comment, $m)) {
-            return new AssertFileExists($m[1], $context->getLine(), $context->getFile());
+        foreach ($this->getExpressions() as $expression) {
+            if (preg_match($expression, $comment, $m)) {
+                $files = explode(',', $m[1]);
+                array_walk($files, function (&$path) {
+                    $path = trim($path);
+                });
+                return new AssertFileExists($files, $context->getLine(), $context->getFile());
+            }
         }
 
         return false;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExpressions()
+    {
+        return [
+            '/creates?\sf?i?l?e?s?\s?(.*)/i'
+        ];
     }
 }

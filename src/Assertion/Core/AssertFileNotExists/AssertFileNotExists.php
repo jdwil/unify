@@ -10,21 +10,21 @@ use JDWil\Unify\Assertion\AbstractAssertion;
 class AssertFileNotExists extends AbstractAssertion
 {
     /**
-     * @var string
+     * @var array
      */
-    private $filePath;
+    private $filePaths;
 
     /**
      * AssertFileNotExists constructor.
-     * @param string $filePath
+     * @param array $filePaths
      * @param int $line
      * @param string $file
      */
-    public function __construct($filePath, $line, $file)
+    public function __construct($filePaths, $line, $file)
     {
-        $this->filePath = $filePath;
-
+        $this->filePaths = $filePaths;
         parent::__construct($line, $file);
+        $this->result = true;
     }
 
     /**
@@ -34,14 +34,18 @@ class AssertFileNotExists extends AbstractAssertion
      */
     public function getDebuggerCommands()
     {
-        return [
-            sprintf(
+        $ret = [];
+
+        foreach ($this->filePaths as $filePath) {
+            $ret[] = sprintf(
                 "eval -i %%d -- %s\0",
                 base64_encode(
-                    sprintf('!file_exists(\'%s\');', $this->filePath)
+                    sprintf('!file_exists(\'%s\');', $filePath)
                 )
-            )
-        ];
+            );
+        }
+
+        return $ret;
     }
 
     /**
@@ -50,7 +54,9 @@ class AssertFileNotExists extends AbstractAssertion
      */
     public function assert(\DOMElement $response, $responseNumber = 1)
     {
-        $this->result = (bool) $response->firstChild->nodeValue;
+        if ($this->result) {
+            $this->result = (bool) $response->firstChild->nodeValue;
+        }
     }
 
     /**
@@ -58,6 +64,6 @@ class AssertFileNotExists extends AbstractAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert "%s" does not exist.', $this->filePath);
+        return sprintf('Assert "%s" does not exist.', implode(', ', $this->filePaths));
     }
 }

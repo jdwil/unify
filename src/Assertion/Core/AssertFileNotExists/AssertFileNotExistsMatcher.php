@@ -18,15 +18,26 @@ class AssertFileNotExistsMatcher implements AssertionMatcherInterface
      */
     public function match($comment, Context $context)
     {
-        /**
-         * Assert a file does not exist.
-         *
-         * // deletes file /path/to/file.xyz
-         */
-        if (preg_match('/deletes? file (\S+)/i', $comment, $m)) {
-            return new AssertFileNotExists($m[1], $context->getLine(), $context->getFile());
+        foreach ($this->getExpressions() as $expression) {
+            if (preg_match($expression, $comment, $m)) {
+                $files = explode(',', $m[1]);
+                array_walk($files, function (&$file) {
+                    $file = trim($file);
+                });
+                return new AssertFileNotExists($files, $context->getLine(), $context->getFile());
+            }
         }
 
         return false;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExpressions()
+    {
+        return [
+            '/deletes?\sf?i?l?e?s?\s?(.*)/i'
+        ];
     }
 }

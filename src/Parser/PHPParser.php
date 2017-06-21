@@ -22,6 +22,16 @@ class PHPParser
     private $filePath;
 
     /**
+     * @var array
+     */
+    private $tokens;
+
+    /**
+     * @var int
+     */
+    private $index;
+
+    /**
      * @var Context
      */
     private $context;
@@ -31,12 +41,13 @@ class PHPParser
      */
     private $lastAssertionLine;
 
-    public function __construct($filePath, Pipeline $pipeline)
+    public function __construct($filePath, Pipeline $pipeline, $autoloadPath)
     {
         $this->filePath = $filePath;
         $this->lastAssertionLine = 0;
         $this->context = new Context();
         $this->context->setFile($filePath);
+        $this->context->setAutoloadPath($autoloadPath);
         $this->assertions = new AssertionQueue();
         $this->pipeline = $pipeline;
     }
@@ -46,18 +57,45 @@ class PHPParser
         if (null === $code) {
             // @todo use finder
             $this->lines = file($this->context->getFile());
+            array_unshift($this->lines, '');
+            $this->tokens = token_get_all(file_get_contents($this->context->getFile()));
         } else {
             $this->lines = explode("\n", $code);
+            array_unshift($this->lines, '');
+            $this->tokens = token_get_all($code);
             array_walk($this->lines, function (&$line, $index) {
                 $line = sprintf("%s\n", $line);
             });
         }
 
-        for ($endLine = count($this->lines), $this->lineNumber = 0; $this->lineNumber < $endLine; $this->lineNumber++) {
-            $this->line = trim($this->lines[$this->lineNumber]);
-            $this->collectUseStatements();
-            $this->processSingleLineComment();
-            $this->processInlineComment();
+        $this->index = 1;
+
+        while ($token = $this->next()) {
+            if ($this->isComment($token)) {
+                list($type, $comment, $lineNumber) = $token;
+                echo "1\n";
+                $comment = $this->normalizeComment($comment);
+                echo "2\n";
+                $this->context->setLine($this->getNextBreakableLine());
+                echo "3\n";
+                $this->context->setAssignmentVariable($this->getNextAssignedVariable());
+                echo "4\n";
+                $this->context->setCodeContext(''); // @todo add code context
+                echo "5\n";
+
+                if ($assertion = $this->pipeline->handleComment($comment, $this->context)) {
+                    $assertion->setCodeContext(
+                        implode('', array_slice(
+                            $this->lines,
+                            $this->lastAssertionLine,
+                            $this->lineNumber + 2 - $this->lastAssertionLine
+                        ))
+                    );
+                    $assertion->setContext($this->context);
+                    $this->context->resetCodeContext();
+                    $this->assertions->add($assertion);
+                }
+            }
         }
     }
 
@@ -73,6 +111,113 @@ class PHPParser
         return $this->assertions;
     }
 
+    protected function normalizeComment($comment)
+    {
+        $lines = explode("\n", $comment);
+        array_walk($lines, function (&$line) {
+            $line = trim($line);
+            $line = preg_replace('~\*/$~', '', $line);
+            $line = preg_replace('~^//|/\*\*|/\*|#|\*~', '', $line);
+            $line = trim($line);
+        });
+
+        $lines = array_values(array_filter($lines));
+
+        for ($i = 0; $i < count($lines); $i++) {
+            if (isset($lines[$i], $lines[$i + 1]) && substr($lines[$i], -1) === '\\') {
+                $lines[$i] = preg_replace('~\\\\$~', '', $lines[$i]);
+                $lines[$i] .= $lines[$i + 1];
+                unset($lines[$i + 1]);
+                $i--;
+                $lines = array_values($lines);
+            }
+        }
+
+        return array_filter($lines);
+    }
+
+    protected function getNextBreakableLine()
+    {
+        $i = 1;
+        do {
+            $peek = $this->peek($i);
+            $i++;
+        } while ($peek && !$this->isBreakableToken($peek));
+
+        return $peek ? $peek[2] : false;
+    }
+
+    protected function getNextAssignedVariable()
+    {
+        $i = 1;
+        do {
+            $peek1 = $this->peek($i);
+            $peek2 = $this->peek($i + 1);
+            var_dump($peek2);
+            $i++;
+        } while ($peek1 && $peek2 && !$this->isVariable($peek1) && $peek2 !== '=');
+
+        return $peek1 ? $peek1[1] : false;
+    }
+
+    protected function isWhitespace($token)
+    {
+        return is_array($token) && $token[0] === T_WHITESPACE;
+    }
+
+    protected function isComment($token)
+    {
+        return is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true);
+    }
+
+    protected function isVariable($token)
+    {
+        return is_array($token) && $token[0] === T_VARIABLE;
+    }
+
+    protected function isBreakableToken($token)
+    {
+        if (in_array($token[0], [
+            T_COMMENT, T_DOC_COMMENT, T_WHITESPACE
+        ], true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function next()
+    {
+        if (!isset($this->tokens[$this->index])) {
+            return false;
+        }
+
+        return $this->tokens[$this->index++];
+    }
+
+    protected function peek($advance = 1)
+    {
+        $i = 1;
+        $token = false;
+        $hits = 0;
+
+        while ($hits < $advance) {
+            if (isset($this->tokens[$this->index + $i])) {
+                $token = $this->tokens[$this->index + $i];
+                if (!$this->isWhitespace($token)) {
+                    $hits++;
+                }
+                $i++;
+            } else {
+                return false;
+            }
+        }
+
+        return $token;
+    }
+
+    // Old
+
     protected function processSingleLineComment()
     {
         if (!preg_match('~^//~', $this->line) &&
@@ -87,7 +232,7 @@ class PHPParser
         $this->context->setAssignmentVariable($this->getAssignedVariableFromNextLine());
         $this->context->setLine($this->nextStatementLine($this->lineNumber + 2));
 
-        if ($assertion = $this->pipeline->handleLine($this->line, $this->context)) {
+        if ($assertion = $this->pipeline->handleComment($this->line, $this->context)) {
             $assertion->setCodeContext(
                 implode('', array_slice(
                     $this->lines,
@@ -115,7 +260,7 @@ class PHPParser
         $this->context->setAssignmentVariable($this->getAssignedVariableFromLine($this->lineNumber));
         $this->context->setLine($this->nextStatementLine($this->lineNumber + 1));
 
-        if ($assertion = $this->pipeline->handleLine($this->line, $this->context)) {
+        if ($assertion = $this->pipeline->handleComment($this->line, $this->context)) {
             $assertion->setCodeContext(
                 implode('', array_slice(
                     $this->lines,

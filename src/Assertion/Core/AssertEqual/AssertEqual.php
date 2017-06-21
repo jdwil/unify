@@ -48,12 +48,10 @@ class AssertEqual extends AbstractAssertion
     {
         $ret = ["context_get -i %d -d 0 -c 0\0"];
 
-        echo sprintf('%s %s;', implode(' ', $this->context->getUseStatements()), $this->value);
-
         if ($this->valueNeedsEvaluation()) {
             $ret[] = sprintf(
                 "eval -i %%d -- %s\0",
-                base64_encode(sprintf('%s %s;', implode(' ', $this->context->getUseStatements()), $this->value))
+                base64_encode(sprintf('%s;', $this->fullyQualifyClassConstant($this->value)))
             );
         }
 
@@ -73,12 +71,13 @@ class AssertEqual extends AbstractAssertion
                     if ($this->valueNeedsEvaluation()) {
                         $this->internalValue = $child->nodeValue;
                     } else {
-                        $this->result = $child->nodeValue == $this->value;
+                        $this->result = $child->nodeValue === $this->value;
                     }
                 }
             }
         } else {
-
+            $value = $response->firstChild->nodeValue;
+            $this->result = $value === $this->internalValue;
         }
     }
 

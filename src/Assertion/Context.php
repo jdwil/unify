@@ -25,7 +25,15 @@ class Context
      */
     private $codeContext;
 
+    /**
+     * @var array
+     */
     private $useStatements;
+
+    /**
+     * @var string
+     */
+    private $autoloadPath;
 
     /**
      * Context constructor.
@@ -87,7 +95,7 @@ class Context
     /**
      * @return string
      */
-    public function getCodeContext(): string
+    public function getCodeContext()
     {
         return $this->codeContext;
     }
@@ -95,7 +103,7 @@ class Context
     /**
      * @param string $codeContext
      */
-    public function setCodeContext(string $codeContext)
+    public function setCodeContext($codeContext)
     {
         $this->codeContext = $codeContext;
     }
@@ -121,5 +129,15 @@ class Context
     public function getUseStatements()
     {
         return $this->useStatements;
+    }
+
+    public function setAutoloadPath($autoloadPath)
+    {
+        $this->autoloadPath = $autoloadPath;
+    }
+
+    public function getAutoloadPath()
+    {
+        return $this->autoloadPath;
     }
 }

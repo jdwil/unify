@@ -43,7 +43,7 @@ class ParserFactory
      */
     public function createPhpParser($filePath)
     {
-        return new PHPParser($filePath, $this->pipeline);
+        return new PHPParser($filePath, $this->pipeline, $this->autoloadPath);
     }
 
     /**
@@ -56,7 +56,7 @@ class ParserFactory
 
         switch ($type) {
             case FileTypeChecker::PHP:
-                return new PHPParser($filePath, $this->pipeline);
+                return new PHPParser($filePath, $this->pipeline, $this->autoloadPath);
 
             case FileTypeChecker::MARKDOWN:
                 return new MarkdownParser($filePath, $this, $this->autoloadPath);

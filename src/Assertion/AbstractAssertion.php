@@ -90,4 +90,33 @@ abstract class AbstractAssertion implements AssertionInterface
     {
         $this->context = $context;
     }
+
+    /**
+     * @param string $code
+     * @return string
+     */
+    protected function prepareEvalCode($code)
+    {
+        return sprintf(
+            'require_once "%s"; %s %s;',
+            $this->context->getAutoloadPath(),
+            implode(' ', $this->context->getUseStatements()),
+            $code
+        );
+    }
+
+    protected function fullyQualifyClassConstant($code)
+    {
+        if (strpos($code, '::') !== false) {
+            list($class, $constant) = explode('::', $code);
+            foreach ($this->context->getUseStatements() as $useStatement) {
+                if (preg_match("~{$class};~", $useStatement)) {
+                    preg_match('~use ([^;]+);~', $useStatement, $m);
+                    return sprintf('%s::%s', $m[1], $constant);
+                }
+            }
+        }
+
+        return false;
+    }
 }

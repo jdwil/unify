@@ -12,8 +12,7 @@ $filesystem = new Filesystem();
  * Test that PHP files are detected properly.
  */
 
-// creates file /tmp/test.php
-file_put_contents('/tmp/test.php', '<?php $x = 1;');
+file_put_contents('/tmp/test.php', '<?php $x = 1;'); // creates file /tmp/test.php
 
 /**
  * /tmp/test.php now contains:

@@ -8,9 +8,14 @@ namespace JDWil\Unify\Assertion;
 interface AssertionMatcherInterface
 {
     /**
-     * @param $comment
+     * @param array $comment
      * @param Context $context
-     * @return AssertionInterface|false
+     * @return AssertionInterface[]
      */
     public function match($comment, Context $context);
+
+    /**
+     * @return array
+     */
+    public function getExpressions();
 }

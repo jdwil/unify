@@ -43,7 +43,8 @@ class TestRunner
             [
                 OutputInterface::VERBOSITY_QUIET,
                 OutputInterface::VERBOSITY_NORMAL
-            ]
+            ],
+            true
         );
 
         if ($showProgress) {

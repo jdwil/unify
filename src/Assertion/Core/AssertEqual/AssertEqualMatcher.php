@@ -11,44 +11,54 @@ use JDWil\Unify\Assertion\Context;
  */
 class AssertEqualMatcher implements AssertionMatcherInterface
 {
+    const SINGLE_VALUE = 0;
+    const EXPRESSION = 1;
+
     /**
-     * @param $comment
+     * @param array $comment
      * @param Context $context
-     * @return AssertionInterface|false
+     * @return AssertionInterface[]
      */
     public function match($comment, Context $context)
     {
-        /**
-         * Single value in comments will be asserted as equal, ie:
-         *
-         * // 'bar'
-         * $foo = 'bar';
-         */
-        if (preg_match('/^[\'\"]?[a-zA-Z0-9_\.]+[\'\"]?$/', $comment, $m)) {
-            return new AssertEqual(
-                $context->getAssignmentVariable(),
-                $m[0],
-                $context->getLine(),
-                $context->getFile()
-            );
+        $assertions = [];
+
+        foreach ($this->getExpressions() as $type => $expression) {
+            foreach ($comment as $line) {
+                if (preg_match_all($expression, $line, $m)) {
+                    // @todo stopped here. $m doesn't match up with this loop.
+                    foreach ($m as $match) {
+                        $variable = $value = '';
+
+                        switch ($type) {
+                            case self::SINGLE_VALUE:
+                                $variable = $context->getAssignmentVariable();
+                                $value = $match[0];
+                                break;
+
+                            case self::EXPRESSION:
+                                $variable = $match[1];
+                                $value = $match[3];
+                                break;
+                        }
+
+                        $assertions[] = new AssertEqual($variable, $value, $context->getLine(), $context->getFile());
+                    }
+                }
+            }
         }
 
-        /**
-         * Assertions can be formatted as simple expressions:
-         *
-         * // $foo = 'bar'
-         * // $foo == 'bar'
-         * // $foo === 'bar'
-         */
-        if (preg_match('/(\$[a-zA-Z]\w*)\s*(is|==?=?)\s*([\'\"]?[a-zA-Z0-9_:>-]*[\'\"]?)/', $comment, $m)) {
-            return new AssertEqual(
-                $m[1],
-                $m[3],
-                $context->getLine(),
-                $context->getFile()
-            );
-        }
+        return $assertions;
+    }
 
-        return false;
+    /**
+     * @return array
+     */
+    public function getExpressions()
+    {
+        return [
+            self::SINGLE_VALUE  => '/^[\'\"]?[a-zA-Z0-9_\.]+[\'\"]?$/',
+            self::EXPRESSION    => '/(\$[a-zA-Z]\w*)\s*(is|==?=?)\s*([\'\"]?[a-zA-Z0-9_:>-]*[\'\"]?)/'
+        ];
     }
 }

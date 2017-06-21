@@ -29,14 +29,14 @@ class Pipeline
     }
 
     /**
-     * @param $line
+     * @param array $comment
      * @param Context $context
      * @return bool|false|AssertionInterface
      */
-    public function handleLine($line, Context $context)
+    public function handleComment($comment, Context $context)
     {
         foreach ($this->matchers as $matcher) {
-            if ($assertion = $matcher->match($line, $context)) {
+            if ($assertion = $matcher->match($comment, $context)) {
                 return $assertion;
             }
         }
