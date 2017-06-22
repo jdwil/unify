@@ -30,7 +30,7 @@ $filesystem->remove('/tmp/test-file.php');                      // Delete file /
 foreach (['markdown', 'mdown', 'mkdn', 'md'] as $extension) {
     $file = sprintf('/tmp/test.%s', $extension);
     
-    /* Creates /tmp/test.markdown, then /tmp/test.mdown, /tmp/test.mkdn, /tmp/test.md */
+    /* Creates /tmp/test.markdown, /tmp/test.mdown, /tmp/test.mkdn, /tmp/test.md */
     $filesystem->touch($file);                      
     
     $type = $fileTypeChecker->determineType($file); // $type is FileTypeChecker::MARKDOWN

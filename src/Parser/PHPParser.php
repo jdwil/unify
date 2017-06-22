@@ -73,27 +73,24 @@ class PHPParser
         while ($token = $this->next()) {
             if ($this->isComment($token)) {
                 list($type, $comment, $lineNumber) = $token;
-                echo "1\n";
                 $comment = $this->normalizeComment($comment);
-                echo "2\n";
                 $this->context->setLine($this->getNextBreakableLine());
-                echo "3\n";
                 $this->context->setAssignmentVariable($this->getNextAssignedVariable());
-                echo "4\n";
                 $this->context->setCodeContext(''); // @todo add code context
-                echo "5\n";
 
-                if ($assertion = $this->pipeline->handleComment($comment, $this->context)) {
-                    $assertion->setCodeContext(
-                        implode('', array_slice(
-                            $this->lines,
-                            $this->lastAssertionLine,
-                            $this->lineNumber + 2 - $this->lastAssertionLine
-                        ))
-                    );
-                    $assertion->setContext($this->context);
-                    $this->context->resetCodeContext();
-                    $this->assertions->add($assertion);
+                if ($assertions = $this->pipeline->handleComment($comment, $this->context)) {
+                    foreach ($assertions as $assertion) {
+                        $assertion->setCodeContext(
+                            implode('', array_slice(
+                                $this->lines,
+                                $this->lastAssertionLine,
+                                $this->lineNumber + 2 - $this->lastAssertionLine
+                            ))
+                        );
+                        $assertion->setContext($this->context);
+                        $this->context->resetCodeContext();
+                        $this->assertions->add($assertion);
+                    }
                 }
             }
         }
@@ -144,7 +141,7 @@ class PHPParser
             $i++;
         } while ($peek && !$this->isBreakableToken($peek));
 
-        return $peek ? $peek[2] : false;
+        return $this->isBreakableToken($peek) ? $peek[2] : false;
     }
 
     protected function getNextAssignedVariable()
@@ -153,11 +150,10 @@ class PHPParser
         do {
             $peek1 = $this->peek($i);
             $peek2 = $this->peek($i + 1);
-            var_dump($peek2);
             $i++;
         } while ($peek1 && $peek2 && !$this->isVariable($peek1) && $peek2 !== '=');
 
-        return $peek1 ? $peek1[1] : false;
+        return $this->isVariable($peek1) ? $peek1[1] : false;
     }
 
     protected function isWhitespace($token)
@@ -177,7 +173,7 @@ class PHPParser
 
     protected function isBreakableToken($token)
     {
-        if (in_array($token[0], [
+        if (!is_array($token) || in_array($token[0], [
             T_COMMENT, T_DOC_COMMENT, T_WHITESPACE
         ], true)) {
             return false;

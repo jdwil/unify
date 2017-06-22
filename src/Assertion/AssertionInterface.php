@@ -26,6 +26,11 @@ interface AssertionInterface
     public function getLine();
 
     /**
+     * @return int|null
+     */
+    public function getIteration();
+
+    /**
      * @return string
      */
     public function getFile();

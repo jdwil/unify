@@ -25,15 +25,18 @@ class AssertEqualMatcher implements AssertionMatcherInterface
 
         foreach ($this->getExpressions() as $type => $expression) {
             foreach ($comment as $line) {
-                if (preg_match_all($expression, $line, $m)) {
-                    // @todo stopped here. $m doesn't match up with this loop.
+                if (preg_match_all($expression, $line, $m, PREG_SET_ORDER)) {
                     foreach ($m as $match) {
                         $variable = $value = '';
 
                         switch ($type) {
                             case self::SINGLE_VALUE:
-                                $variable = $context->getAssignmentVariable();
-                                $value = $match[0];
+                                if (strpos($match[0], ',') !== false) {
+
+                                } else {
+                                    $variable = $context->getAssignmentVariable();
+                                    $value = $match[0];
+                                }
                                 break;
 
                             case self::EXPRESSION:

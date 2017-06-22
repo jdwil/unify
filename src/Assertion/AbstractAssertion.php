@@ -2,13 +2,20 @@
 
 namespace JDWil\Unify\Assertion;
 
-
+/**
+ * Class AbstractAssertion
+ */
 abstract class AbstractAssertion implements AssertionInterface
 {
     /**
      * @var int
      */
     protected $line;
+
+    /**
+     * @var int|null
+     */
+    protected $iteration;
 
     /**
      * @var string
@@ -34,12 +41,14 @@ abstract class AbstractAssertion implements AssertionInterface
      * AbstractAssertion constructor.
      * @param int $line
      * @param string $file
+     * @param int $iteration
      */
-    public function __construct($line, $file)
+    public function __construct($line, $file, $iteration = null)
     {
         $this->line = $line;
         $this->file = $file;
         $this->codeContext = '';
+        $this->iteration = $iteration;
     }
 
     /**
@@ -89,6 +98,22 @@ abstract class AbstractAssertion implements AssertionInterface
     public function setContext(Context $context)
     {
         $this->context = $context;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getIteration()
+    {
+        return $this->iteration;
+    }
+
+    /**
+     * @param int|null $iteration
+     */
+    public function setIteration($iteration)
+    {
+        $this->iteration = $iteration;
     }
 
     /**

@@ -12,19 +12,23 @@ use JDWil\Unify\Assertion\Context;
 class AssertFileExistsMatcher implements AssertionMatcherInterface
 {
     /**
-     * @param $comment
+     * @param array $comment
      * @param Context $context
      * @return AssertionInterface|false
      */
     public function match($comment, Context $context)
     {
         foreach ($this->getExpressions() as $expression) {
-            if (preg_match($expression, $comment, $m)) {
-                $files = explode(',', $m[1]);
-                array_walk($files, function (&$path) {
-                    $path = trim($path);
-                });
-                return new AssertFileExists($files, $context->getLine(), $context->getFile());
+            foreach ($comment as $line) {
+                if (preg_match_all($expression, $line, $m, PREG_SET_ORDER)) {
+                    foreach ($m as $match) {
+                        $files = explode(',', $match[1]);
+                        array_walk($files, function (&$path) {
+                            $path = trim($path);
+                        });
+                        return new AssertFileExists($files, $context->getLine(), $context->getFile());
+                    }
+                }
             }
         }
 
