@@ -3,6 +3,7 @@
 namespace JDWil\Unify\Parser;
 
 use JDWil\Unify\Assertion\Pipeline;
+use Phlexy\Lexer\Stateful;
 
 /**
  * Class ParserFactory
@@ -25,14 +26,21 @@ class ParserFactory
     private $autoloadPath;
 
     /**
+     * @var Stateful
+     */
+    private $lexer;
+
+    /**
      * ParserFactory constructor.
      * @param FileTypeChecker $fileTypeChecker
+     * @param Stateful $lexer
      * @param Pipeline $pipeline
      * @param string $autoloadPath
      */
-    public function __construct(FileTypeChecker $fileTypeChecker, Pipeline $pipeline, $autoloadPath)
+    public function __construct(FileTypeChecker $fileTypeChecker, Stateful $lexer, Pipeline $pipeline, $autoloadPath)
     {
         $this->fileTypeChecker = $fileTypeChecker;
+        $this->lexer = $lexer;
         $this->pipeline = $pipeline;
         $this->autoloadPath = $autoloadPath;
     }
@@ -43,7 +51,15 @@ class ParserFactory
      */
     public function createPhpParser($filePath)
     {
-        return new PHPParser($filePath, $this->pipeline, $this->autoloadPath);
+        return new PHPParser($filePath, $this, $this->pipeline, $this->autoloadPath);
+    }
+
+    /**
+     * @return UnifyParser
+     */
+    public function createUnifyParser()
+    {
+        return new UnifyParser($this->lexer);
     }
 
     /**
@@ -56,7 +72,7 @@ class ParserFactory
 
         switch ($type) {
             case FileTypeChecker::PHP:
-                return new PHPParser($filePath, $this->pipeline, $this->autoloadPath);
+                return new PHPParser($filePath, $this, $this->pipeline, $this->autoloadPath);
 
             case FileTypeChecker::MARKDOWN:
                 return new MarkdownParser($filePath, $this, $this->autoloadPath);

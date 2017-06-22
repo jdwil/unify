@@ -20,10 +20,28 @@ services:
     finder:
         factory: ['Symfony\Component\Finder\Finder', create]
 
+    lexer:
+        factory: "lexer_factory:createLexer"
+        arguments:
+            - "@=service('lexer_definition').create()"
+            - "i"
+
+    lexer_data_generator:
+        class: Phlexy\LexerDataGenerator
+
+    lexer_definition:
+        class: JDWil\Unify\Lexer\LexerDefinition
+
+    lexer_factory:
+        class: \Phlexy\LexerFactory\Stateful\UsingCompiledRegex
+        arguments:
+            - "@lexer_data_generator"
+
     parser_factory:
         class: JDWil\Unify\Parser\ParserFactory
         arguments:
             - "@file_type_checker"
+            - "@lexer"
             - "@pipeline"
             - "%autoload_path%"
 

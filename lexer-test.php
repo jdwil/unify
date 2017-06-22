@@ -8,6 +8,6 @@ $factory = new \Phlexy\LexerFactory\Stateful\UsingCompiledRegex(
 );
 $lexer = $factory->createLexer($lexerDefinition->create(), 'i');
 
-$tokens = $lexer->lex('Create ../file.txt, /tmp/test.xtx');
+$tokens = $lexer->lex('creates file /tmp/test.php');
 
 print_r($tokens);

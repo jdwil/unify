@@ -41,10 +41,16 @@ class PHPParser
      */
     private $lastAssertionLine;
 
-    public function __construct($filePath, Pipeline $pipeline, $autoloadPath)
+    /**
+     * @var ParserFactory
+     */
+    private $factory;
+
+    public function __construct($filePath, ParserFactory $factory, Pipeline $pipeline, $autoloadPath)
     {
         $this->filePath = $filePath;
         $this->lastAssertionLine = 0;
+        $this->factory = $factory;
         $this->context = new Context();
         $this->context->setFile($filePath);
         $this->context->setAutoloadPath($autoloadPath);
@@ -74,6 +80,11 @@ class PHPParser
             if ($this->isComment($token)) {
                 list($type, $comment, $lineNumber) = $token;
                 $comment = $this->normalizeComment($comment);
+                echo $comment . ":\n";
+                $parser = $this->factory->createUnifyParser();
+                $parser->parse($comment);
+
+                /*
                 $this->context->setLine($this->getNextBreakableLine());
                 $this->context->setAssignmentVariable($this->getNextAssignedVariable());
                 $this->context->setCodeContext(''); // @todo add code context
@@ -92,6 +103,7 @@ class PHPParser
                         $this->assertions->add($assertion);
                     }
                 }
+                */
             }
         }
     }
@@ -130,7 +142,10 @@ class PHPParser
             }
         }
 
-        return array_filter($lines);
+        $comment = array_filter($lines);
+        $comment = implode("\n", $comment);
+
+        return $comment;
     }
 
     protected function getNextBreakableLine()
