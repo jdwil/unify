@@ -41,11 +41,19 @@ class UnifyParser
             return false;
         }
 
+        $tokenGroups = $tokenGroup = [];
         while ($token = $this->skipWhitespace()) {
-            print_r($token);
+            if ($token[0] === UT_END_ASSERTION) {
+                $tokenGroups[] = $tokenGroup;
+                $tokenGroup = [];
+            } else {
+                $tokenGroup[] = $token;
+            }
         }
 
-        die();
+        $tokenGroups[] = $tokenGroup;
+
+        return $tokenGroups;
     }
 
     private function next()

@@ -98,6 +98,11 @@ class DebugSession
     private $currentAssertionNumber;
 
     /**
+     * @var array
+     */
+    private $iterations;
+
+    /**
      * DebugSession constructor.
      * @param string $host
      * @param int $port
@@ -113,6 +118,7 @@ class DebugSession
         $this->debuggerStopped = false;
         $this->loop = Factory::create();
         $this->mode = self::MODE_INITIALIZE;
+        $this->iterations = [];
 
         $this->initializationCommands = [
             "feature_set -i %d -n show_hidden -v 1\0",
@@ -183,6 +189,11 @@ class DebugSession
             $this->mode = self::MODE_POSTMORTEM;
         }
 
+        if ($response->firstChild && $response->firstChild->localName === 'message') {
+            $line = (int) $response->firstChild->getAttribute('lineno');
+            $this->bumpIterationCount($line);
+        }
+
         switch ($this->mode) {
             case self::MODE_INITIALIZE:
                 $command = array_shift($this->initializationCommands);
@@ -195,7 +206,7 @@ class DebugSession
 
             case self::MODE_RUNNING:
                 $line = (int) $response->firstChild->getAttribute('lineno');
-                $assertions = $this->assertions->findByLine($line);
+                $assertions = $this->assertions->find($line, $this->iterationCount($line));
                 if (!$assertions->isEmpty()) {
                     $this->assertionQueue = $assertions;
                     $this->mode = self::MODE_ASSERTING;
@@ -217,10 +228,9 @@ class DebugSession
                     $this->currentAssertionNumber++;
                     $this->send($connection, array_shift($this->commandStack));
                     break;
-                } else {
-                    $this->assertionQueue->next();
                 }
 
+                $this->assertionQueue->next();
                 $this->outputAssertionResult($assertion);
 
                 if ($this->assertionQueue->isEmpty()) {
@@ -237,7 +247,7 @@ class DebugSession
 
             case self::MODE_POSTMORTEM:
                 if (null !== $this->assertionQueue) {
-                    $assertions = $this->assertionQueue->findByLine(0);
+                    $assertions = $this->assertionQueue->find(0, 0);
                     if (!$assertions->isEmpty()) {
                         $this->assertionQueue = $assertions;
                         $this->mode = self::MODE_ASSERTING;
@@ -305,6 +315,20 @@ class DebugSession
         $connection->close();
         $this->socket->close();
         $this->loop->stop();
+    }
+
+    private function iterationCount($line)
+    {
+        return isset($this->iterations[$line]) ? $this->iterations[$line] : 0;
+    }
+
+    private function bumpIterationCount($line)
+    {
+        if (!isset($this->iterations[$line])) {
+            $this->iterations[$line] = 1;
+        } else {
+            $this->iterations[$line]++;
+        }
     }
 
     /**

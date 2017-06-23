@@ -28,7 +28,7 @@ class PipelineFactory
 
         static::$PIPELINE = new Pipeline();
 
-        $finder->files()->in(__DIR__)->name('*Matcher.php');
+        $finder->files()->in(__DIR__)->name('*Parser.php');
         $fileNames = [];
 
         foreach ($finder as $file) {
@@ -39,8 +39,10 @@ class PipelineFactory
         $declared = get_declared_classes();
         foreach ($declared as $className) {
             $reflectionClass = new \ReflectionClass($className);
-            if (in_array($reflectionClass->getFileName(), $fileNames, true)) {
-                /** @var AssertionMatcherInterface $matcher */
+            if (in_array($reflectionClass->getFileName(), $fileNames, true) &&
+                !$reflectionClass->isAbstract()
+            ) {
+                /** @var AssertionParserInterface $matcher */
                 $matcher = $reflectionClass->newInstance();
                 static::$PIPELINE->addMatcher($matcher);
             }

@@ -62,13 +62,18 @@ class AssertionQueue
 
     /**
      * @param int $line
+     * @param int $iteration
      * @return AssertionQueue
      */
-    public function findByLine($line)
+    public function find($line, $iteration)
     {
         $ret = new AssertionQueue();
         foreach ($this->assertions as $assertion) {
-            if ($assertion->getLine() === $line) {
+            if ($assertion->getLine() === $line &&
+                ($assertion->getIteration() === $iteration ||
+                 $assertion->getIteration() === 0
+                )
+            ) {
                 $ret->add($assertion);
             }
         }

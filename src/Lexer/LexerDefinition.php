@@ -20,6 +20,7 @@ define('UT_GREATER_THAN_OR_EQUAL', 112);
 define('UT_LESS_THAN', 113);
 define('UT_LESS_THAN_OR_EQUAL', 114);
 define('UT_FILE_PATH', 115);
+define('UT_COMMENT', 116);
 
 class LexerDefinition
 {
@@ -31,12 +32,14 @@ class LexerDefinition
     const FLOAT = '[0-9]*\.[0-9]+';
     const QUOTED_FILE_PATH = '[\'"][^\'"]+[\'"]';
     const UNQUOTED_FILE_PATH = '\.?\.?\/[^\s,;]+';
+    const COMMENT = '\([^\)]*\)';
 
     public function create()
     {
         return [
             'INITIAL' => [
                 self::WHITESPACE => UT_WHITESPACE,
+                self::COMMENT => UT_COMMENT,
                 self::VARIABLE => function (Stateful $lexer) {
                     $lexer->swapState('IN_VARIABLE');
 
@@ -58,6 +61,7 @@ class LexerDefinition
 
             'IN_VARIABLE' => [
                 self::WHITESPACE => UT_WHITESPACE,
+                self::COMMENT => UT_COMMENT,
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::FLOAT => UT_FLOAT,
@@ -85,6 +89,7 @@ class LexerDefinition
 
             'IN_FILE' => [
                 self::WHITESPACE => UT_WHITESPACE,
+                self::COMMENT => UT_COMMENT,
                 self::QUOTED_FILE_PATH => UT_FILE_PATH,
                 self::UNQUOTED_FILE_PATH => UT_FILE_PATH,
                 ',' => UT_MORE,

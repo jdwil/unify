@@ -29,14 +29,15 @@ class AssertEqual extends AbstractAssertion
      * @param string $variable
      * @param $value
      * @param int $line
+     * @param int $iteration
      * @param string $file
      */
-    public function __construct($variable, $value, $line, $file)
+    public function __construct($variable, $value, $line, $iteration, $file)
     {
         $this->variable = $variable;
         $this->value = $value;
 
-        parent::__construct($line, $file);
+        parent::__construct($line, $file, $iteration);
     }
 
     /**

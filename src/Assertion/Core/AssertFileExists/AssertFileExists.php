@@ -10,26 +10,22 @@ use JDWil\Unify\Assertion\AbstractAssertion;
 class AssertFileExists extends AbstractAssertion
 {
     /**
-     * @var array
+     * @var string
      */
-    private $filePaths;
-
-    /**
-     * @var int
-     */
-    private $numChecks;
+    private $filePath;
 
     /**
      * AssertFileExists constructor.
-     * @param array $filePaths
+     * @param string $filePath
      * @param int $line
+     * @param int $iteration
      * @param string $file
      */
-    public function __construct($filePaths, $line, $file)
+    public function __construct($filePath, $line, $iteration, $file)
     {
-        $this->filePaths = $filePaths;
+        $this->filePath = $filePath;
 
-        parent::__construct($line, $file);
+        parent::__construct($line, $file, $iteration);
     }
 
     /**
@@ -40,16 +36,12 @@ class AssertFileExists extends AbstractAssertion
     public function getDebuggerCommands()
     {
         $ret = [];
-        foreach ($this->filePaths as $filePath) {
-            $ret[] = sprintf(
-                "eval -i %%d -- %s\0",
-                base64_encode(
-                    sprintf('file_exists(\'%s\');', $filePath)
-                )
-            );
-        }
-
-        $this->numChecks = count($ret);
+        $ret[] = sprintf(
+            "eval -i %%d -- %s\0",
+            base64_encode(
+                sprintf('file_exists(\'%s\');', $this->filePath)
+            )
+        );
 
         return $ret;
     }
@@ -70,6 +62,6 @@ class AssertFileExists extends AbstractAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert "%s" exists.', implode(', ', $this->filePaths));
+        return sprintf('Assert "%s" exists.', $this->filePath);
     }
 }

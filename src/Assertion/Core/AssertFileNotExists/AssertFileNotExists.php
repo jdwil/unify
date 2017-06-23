@@ -12,18 +12,19 @@ class AssertFileNotExists extends AbstractAssertion
     /**
      * @var array
      */
-    private $filePaths;
+    private $filePath;
 
     /**
      * AssertFileNotExists constructor.
-     * @param array $filePaths
+     * @param string $filePath
      * @param int $line
+     * @param int $iteration
      * @param string $file
      */
-    public function __construct($filePaths, $line, $file)
+    public function __construct($filePath, $line, $iteration, $file)
     {
-        $this->filePaths = $filePaths;
-        parent::__construct($line, $file);
+        $this->filePath = $filePath;
+        parent::__construct($line, $file, $iteration);
         $this->result = true;
     }
 
@@ -36,14 +37,12 @@ class AssertFileNotExists extends AbstractAssertion
     {
         $ret = [];
 
-        foreach ($this->filePaths as $filePath) {
-            $ret[] = sprintf(
-                "eval -i %%d -- %s\0",
-                base64_encode(
-                    sprintf('!file_exists(\'%s\');', $filePath)
-                )
-            );
-        }
+        $ret[] = sprintf(
+            "eval -i %%d -- %s\0",
+            base64_encode(
+                sprintf('!file_exists(\'%s\');', $this->filePath)
+            )
+        );
 
         return $ret;
     }
@@ -64,6 +63,6 @@ class AssertFileNotExists extends AbstractAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert "%s" does not exist.', implode(', ', $this->filePaths));
+        return sprintf('Assert "%s" does not exist.', $this->filePath);
     }
 }

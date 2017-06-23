@@ -8,7 +8,7 @@ namespace JDWil\Unify\Assertion;
 class Pipeline
 {
     /**
-     * @var AssertionMatcherInterface[]
+     * @var AssertionParserInterface[]
      */
     private $matchers;
 
@@ -21,9 +21,9 @@ class Pipeline
     }
 
     /**
-     * @param AssertionMatcherInterface $matcher
+     * @param AssertionParserInterface $matcher
      */
-    public function addMatcher(AssertionMatcherInterface $matcher)
+    public function addMatcher(AssertionParserInterface $matcher)
     {
         $this->matchers[] = $matcher;
     }
@@ -31,12 +31,13 @@ class Pipeline
     /**
      * @param array $comment
      * @param Context $context
-     * @return bool|false|AssertionInterface
+     * @return bool|false|AssertionInterface[]
      */
     public function handleComment($comment, Context $context)
     {
         foreach ($this->matchers as $matcher) {
-            if ($assertion = $matcher->match($comment, $context)) {
+            $matcher->initialize($comment, $context);
+            if ($assertion = $matcher->parse()) {
                 return $assertion;
             }
         }

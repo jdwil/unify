@@ -43,7 +43,7 @@ abstract class AbstractAssertion implements AssertionInterface
      * @param string $file
      * @param int $iteration
      */
-    public function __construct($line, $file, $iteration = null)
+    public function __construct($line, $file, $iteration)
     {
         $this->line = $line;
         $this->file = $file;

@@ -74,36 +74,38 @@ class PHPParser
             });
         }
 
+        //$this->stripWhitespace();
         $this->index = 1;
 
         while ($token = $this->next()) {
             if ($this->isComment($token)) {
-                list($type, $comment, $lineNumber) = $token;
-                $comment = $this->normalizeComment($comment);
-                echo $comment . ":\n";
+                $singleLineComment = $this->isSingleLineComment($token);
+                $breakableLine = $this->getNextBreakableLine(
+                    $singleLineComment ? $token[2] + 3 : $token[2]
+                );
+
+                $this->context->setLine($breakableLine);
+                $comment = $this->normalizeComment($token);
                 $parser = $this->factory->createUnifyParser();
-                $parser->parse($comment);
-
-                /*
-                $this->context->setLine($this->getNextBreakableLine());
-                $this->context->setAssignmentVariable($this->getNextAssignedVariable());
-                $this->context->setCodeContext(''); // @todo add code context
-
-                if ($assertions = $this->pipeline->handleComment($comment, $this->context)) {
-                    foreach ($assertions as $assertion) {
-                        $assertion->setCodeContext(
-                            implode('', array_slice(
-                                $this->lines,
-                                $this->lastAssertionLine,
-                                $this->lineNumber + 2 - $this->lastAssertionLine
-                            ))
-                        );
-                        $assertion->setContext($this->context);
-                        $this->context->resetCodeContext();
-                        $this->assertions->add($assertion);
+                if ($assertionTokenGroups = $parser->parse($comment)) {
+                    foreach ($assertionTokenGroups as $assertionTokenGroup) {
+                        if ($assertions = $this->pipeline->handleComment($assertionTokenGroup, $this->context)) {
+                            foreach ($assertions as $assertion) {
+                                $assertion->setCodeContext(
+                                    implode('', array_slice(
+                                        $this->lines,
+                                        $this->lastAssertionLine,
+                                        $token[2] + 1 - $this->lastAssertionLine
+                                    ))
+                                );
+                                $this->lastAssertionLine = $token[2];
+                                $assertion->setContext($this->context);
+                                $this->context->resetCodeContext();
+                                $this->assertions->add($assertion);
+                            }
+                        }
                     }
                 }
-                */
             }
         }
     }
@@ -122,13 +124,15 @@ class PHPParser
 
     protected function normalizeComment($comment)
     {
-        $lines = explode("\n", $comment);
+        $lines = explode("\n", $comment[1]);
+
         array_walk($lines, function (&$line) {
             $line = trim($line);
             $line = preg_replace('~\*/$~', '', $line);
             $line = preg_replace('~^//|/\*\*|/\*|#|\*~', '', $line);
             $line = trim($line);
         });
+
 
         $lines = array_values(array_filter($lines));
 
@@ -148,13 +152,41 @@ class PHPParser
         return $comment;
     }
 
-    protected function getNextBreakableLine()
+    protected function isSingleLineComment($comment)
+    {
+        $line = $comment[2];
+        $tokens = $this->getLineTokens($line);
+        foreach ($tokens as $token) {
+            if ($this->isBreakableToken($token)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function stripWhitespace()
+    {
+        $tokens = [];
+        foreach ($this->tokens as $token) {
+            if (is_array($token) && !$this->isWhitespace($token)) {
+                $tokens[] = $token;
+            }
+        }
+
+        $this->tokens = $tokens;
+    }
+
+    protected function getNextBreakableLine($onOrAfterLine)
     {
         $i = 1;
         do {
             $peek = $this->peek($i);
             $i++;
-        } while ($peek && !$this->isBreakableToken($peek));
+        } while (
+            ($peek && !$this->isBreakableToken($peek)) ||
+            ($peek && (!is_array($peek) || $peek[2] < $onOrAfterLine))
+        );
 
         return $this->isBreakableToken($peek) ? $peek[2] : false;
     }
@@ -171,6 +203,16 @@ class PHPParser
         return $this->isVariable($peek1) ? $peek1[1] : false;
     }
 
+    protected function seekLine($line)
+    {
+        foreach ($this->tokens as $index => $token) {
+            if (is_array($token) && $token[2] >= $line) {
+                $this->index = $line;
+                return;
+            }
+        }
+    }
+
     protected function isWhitespace($token)
     {
         return is_array($token) && $token[0] === T_WHITESPACE;
@@ -184,6 +226,19 @@ class PHPParser
     protected function isVariable($token)
     {
         return is_array($token) && $token[0] === T_VARIABLE;
+    }
+
+    protected function getLineTokens($line)
+    {
+        $ret = [];
+
+        foreach ($this->tokens as $token) {
+            if (is_array($token) && $token[2] === $line) {
+                $ret[] = $token;
+            }
+        }
+
+        return $ret;
     }
 
     protected function isBreakableToken($token)
