@@ -13,11 +13,17 @@ class AssertionQueue
     private $assertions;
 
     /**
+     * @var AssertionInterface[]
+     */
+    private $cache;
+
+    /**
      * AssertionQueue constructor.
      */
     public function __construct()
     {
         $this->assertions = [];
+        $this->cache = [];
     }
 
     /**
@@ -29,11 +35,19 @@ class AssertionQueue
     }
 
     /**
-     * @return array
+     * @return AssertionInterface[]
+     */
+    public function getQueue()
+    {
+        return $this->assertions;
+    }
+
+    /**
+     * @return AssertionInterface[]
      */
     public function all()
     {
-        return $this->assertions;
+        return $this->cache;
     }
 
     /**
@@ -42,6 +56,7 @@ class AssertionQueue
     public function add(AssertionInterface $assertion)
     {
         $this->assertions[] = $assertion;
+        $this->cache[] = $assertion;
     }
 
     /**
@@ -63,9 +78,10 @@ class AssertionQueue
     /**
      * @param int $line
      * @param int $iteration
+     * @param bool $cloneIfRun
      * @return AssertionQueue
      */
-    public function find($line, $iteration)
+    public function find($line, $iteration, $cloneIfRun = true)
     {
         $ret = new AssertionQueue();
         foreach ($this->assertions as $assertion) {
@@ -74,7 +90,14 @@ class AssertionQueue
                  $assertion->getIteration() === 0
                 )
             ) {
-                $ret->add($assertion);
+                if ($cloneIfRun && null !== $assertion->isPass()) {
+                    $newAssertion = clone $assertion;
+                    $newAssertion->setIteration($iteration);
+                    $this->cache[] = $newAssertion;
+                    $ret->add($newAssertion);
+                } else {
+                    $ret->add($assertion);
+                }
             }
         }
 

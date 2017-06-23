@@ -116,6 +116,11 @@ abstract class AbstractAssertion implements AssertionInterface
         $this->iteration = $iteration;
     }
 
+    public function __clone()
+    {
+        $this->result = null;
+    }
+
     /**
      * @param string $code
      * @return string

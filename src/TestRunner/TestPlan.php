@@ -26,11 +26,6 @@ class TestPlan
     private $assertionQueue;
 
     /**
-     * @var AssertionInterface[]
-     */
-    private $assertions;
-
-    /**
      * TestPlan constructor.
      * @param string $file
      * @param AssertionQueue $assertionQueue
@@ -41,10 +36,6 @@ class TestPlan
         $this->file = $file;
         $this->source = $source;
         $this->assertionQueue = $assertionQueue;
-        $this->assertions = [];
-        foreach ($assertionQueue->all() as $assertion) {
-            $this->assertions[] = $assertion;
-        }
     }
 
     /**
@@ -76,7 +67,7 @@ class TestPlan
      */
     public function getAssertions()
     {
-        return $this->assertions;
+        return $this->assertionQueue->all();
     }
 
     /**
@@ -84,7 +75,7 @@ class TestPlan
      */
     public function isPass()
     {
-        foreach ($this->assertions as $assertion) {
+        foreach ($this->assertionQueue->all() as $assertion) {
             if (!$assertion->isPass()) {
                 return false;
             }

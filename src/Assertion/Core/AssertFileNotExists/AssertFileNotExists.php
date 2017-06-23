@@ -25,7 +25,6 @@ class AssertFileNotExists extends AbstractAssertion
     {
         $this->filePath = $filePath;
         parent::__construct($line, $file, $iteration);
-        $this->result = true;
     }
 
     /**
@@ -53,9 +52,7 @@ class AssertFileNotExists extends AbstractAssertion
      */
     public function assert(\DOMElement $response, $responseNumber = 1)
     {
-        if ($this->result) {
-            $this->result = (bool) $response->firstChild->nodeValue;
-        }
+        $this->result = (bool) $response->firstChild->nodeValue;
     }
 
     /**

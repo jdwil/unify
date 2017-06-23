@@ -31,6 +31,11 @@ interface AssertionInterface
     public function getIteration();
 
     /**
+     * @param int $iteration
+     */
+    public function setIteration($iteration);
+
+    /**
      * @return string
      */
     public function getFile();
@@ -59,4 +64,6 @@ interface AssertionInterface
      * @return string
      */
     public function __toString();
+
+    public function __clone();
 }

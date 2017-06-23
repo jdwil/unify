@@ -150,7 +150,11 @@ class DebugSession
     /**
      * @param TestPlan $testPlan
      * @return AssertionQueue
-     * @throws \Exception
+     * @throws \Symfony\Component\Console\Exception\LogicException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \JDWil\Unify\Exception\XdebugException
+     * @throws \LogicException
      */
     public function debugPhp(TestPlan $testPlan)
     {
@@ -185,6 +189,8 @@ class DebugSession
      * @param \DOMElement $response
      * @param ConnectionInterface $connection
      * @throws \JDWil\Unify\Exception\XdebugException
+     * @throws \LogicException
+     * @throws \Symfony\Component\Console\Exception\LogicException
      */
     private function debug(\DOMElement $response, ConnectionInterface $connection)
     {
@@ -209,9 +215,9 @@ class DebugSession
             if ($line === $this->continuingFromLine) {
                 $this->send($connection, "step_over -i %s\0");
                 return;
-            } else {
-                $this->popMode();
             }
+
+            $this->popMode();
         }
 
         switch ($this->mode()) {
@@ -253,6 +259,7 @@ class DebugSession
     /**
      * @param \DOMElement $response
      * @param ConnectionInterface $connection
+     * @throws \LogicException
      */
     protected function handleRunMode(\DOMElement $response, ConnectionInterface $connection)
     {
@@ -262,7 +269,11 @@ class DebugSession
             $this->debugOutput(sprintf('  Found assertions for line %d, iteration %d', $line, $this->iterationCount($line)));
             $this->assertionQueue = $assertions;
             $this->pushMode(self::MODE_ASSERTING);
-            $this->commandStack = $this->assertionQueue->current()->getDebuggerCommands();
+            if ($current = $this->assertionQueue->current()) {
+                $this->commandStack = $current->getDebuggerCommands();
+            } else {
+                throw new \LogicException('assertionQueue::current() returned null');
+            }
             $this->currentAssertionNumber = 0;
         }
 
@@ -281,6 +292,7 @@ class DebugSession
             if (!$assertions->isEmpty()) {
                 $this->assertionQueue = $assertions;
                 $this->pushMode(self::MODE_ASSERTING);
+                // @todo fix
                 $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
             } else {
                 $this->stop($connection);
@@ -293,6 +305,7 @@ class DebugSession
     /**
      * @param \DOMElement $response
      * @param ConnectionInterface $connection
+     * @throws \Symfony\Component\Console\Exception\LogicException
      */
     protected function handleAssertingMode(\DOMElement $response, ConnectionInterface $connection)
     {
@@ -339,6 +352,7 @@ class DebugSession
                 return;
             }
         } else {
+            // @todo fix
             $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
         }
     }

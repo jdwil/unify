@@ -21,7 +21,7 @@ $filesystem = new Filesystem();
  * PHP
  */
 $filesystem->touch('/tmp/test.php');                            // Create file /tmp/test.php
-$type = $fileTypeChecker->determineType('/tmp/test-file.php');  // $type is FileTypeChecker::PHP
+$type = $fileTypeChecker->determineType('/tmp/test-file.php');  // $type is 0 (FileTypeChecker::PHP)
 $filesystem->remove('/tmp/test-file.php');                      // Delete file /tmp/test-file.php
 
 /**
@@ -30,12 +30,12 @@ $filesystem->remove('/tmp/test-file.php');                      // Delete file /
 foreach (['markdown', 'mdown', 'mkdn', 'md'] as $extension) {
     $file = sprintf('/tmp/test.%s', $extension);
     
-    /* Creates /tmp/test.markdown, /tmp/test.mdown, /tmp/test.mkdn, /tmp/test.md */
+    /* Create /tmp/test.markdown, /tmp/test.mdown, /tmp/test.mkdn, /tmp/test.md */
     $filesystem->touch($file);                      
     
-    $type = $fileTypeChecker->determineType($file); // $type is FileTypeChecker::MARKDOWN
+    $type = $fileTypeChecker->determineType($file); // $type is 1 (FileTypeChecker::MARKDOWN)
     
-    /* Deletes /tmp/test.markdown, /tmp/test.mdown, /tmp/test.mkdn, /tmp/test.md */
+    /* Delete /tmp/test.markdown, /tmp/test.mdown, /tmp/test.mkdn, /tmp/test.md */
     $filesystem->remove($file);                     
 }
 ```
