@@ -80,9 +80,11 @@ class PHPParser
         while ($token = $this->next()) {
             if ($this->isComment($token)) {
                 $singleLineComment = $this->isSingleLineComment($token);
-                $breakableLine = $this->getNextBreakableLine(
-                    $singleLineComment ? $token[2] + 3 : $token[2]
-                );
+                if ($singleLineComment) {
+                    $breakableLine = $this->getNextBreakableLine($token[2]);
+                } else {
+                    $breakableLine = $token[2];
+                }
 
                 $this->context->setLine($breakableLine);
                 $comment = $this->normalizeComment($token);
@@ -280,106 +282,5 @@ class PHPParser
         }
 
         return $token;
-    }
-
-    // Old
-
-    protected function processSingleLineComment()
-    {
-        if (!preg_match('~^//~', $this->line) &&
-            !preg_match('~^/\*.*\*/$~', $this->line) &&
-            !preg_match('~^#~', $this->line)
-        ) {
-            return false;
-        }
-
-        $this->line = trim(str_replace(['//', '/*', '*/', '#'], '', $this->line));
-
-        $this->context->setAssignmentVariable($this->getAssignedVariableFromNextLine());
-        $this->context->setLine($this->nextStatementLine($this->lineNumber + 2));
-
-        if ($assertion = $this->pipeline->handleComment($this->line, $this->context)) {
-            $assertion->setCodeContext(
-                implode('', array_slice(
-                    $this->lines,
-                    $this->lastAssertionLine,
-                    $this->lineNumber + 2 - $this->lastAssertionLine
-                ))
-            );
-            $assertion->setContext($this->context);
-            $this->lastAssertionLine = $this->lineNumber + 2;
-            $this->context->resetCodeContext();
-            $this->assertions->add($assertion);
-        }
-    }
-
-    protected function processInlineComment()
-    {
-        if (preg_match('~.+//(.*)$~', $this->line, $m) ||
-            preg_match('~.+#(.*)$~', $this->line, $m) ||
-            preg_match('~.+/\*(.*)\*/~U', $this->line, $m)) {
-            $this->line = trim($m[1]);
-        } else {
-            return false;
-        }
-
-        $this->context->setAssignmentVariable($this->getAssignedVariableFromLine($this->lineNumber));
-        $this->context->setLine($this->nextStatementLine($this->lineNumber + 1));
-
-        if ($assertion = $this->pipeline->handleComment($this->line, $this->context)) {
-            $assertion->setCodeContext(
-                implode('', array_slice(
-                    $this->lines,
-                    $this->lastAssertionLine,
-                    $this->lineNumber + 1 - $this->lastAssertionLine
-                ))
-            );
-            $assertion->setContext($this->context);
-            $this->lastAssertionLine = $this->lineNumber + 1;
-            $this->context->resetCodeContext();
-            $this->assertions->add($assertion);
-        }
-    }
-
-    protected function getAssignedVariableFromNextLine()
-    {
-        return $this->getAssignedVariableFromLine($this->lineNumber + 1);
-    }
-
-    protected function getAssignedVariableFromLine($line)
-    {
-        $line = trim($this->lines[$line]);
-        if (!preg_match('/(\$[a-zA-Z]\w*)\s*=[^=]/', $line, $m)) {
-            return null;
-        }
-
-        return $m[1];
-    }
-
-    protected function nextStatementLine($start)
-    {
-        for ($max = count($this->lines), $i = $start; $i < $max; $i++) {
-            $line = trim($this->lines[$i]);
-
-            if (empty($line) ||
-                strpos($line, '//') === 0 ||
-                strpos($line, '*') === 0 ||
-                strpos($line, '/*') === 0 ||
-                strpos($line, '#') === 0
-            ) {
-                continue;
-            }
-
-            return $i + 1;
-        }
-
-        return 0;
-    }
-
-    protected function collectUseStatements()
-    {
-        if (preg_match('~use [^;]+;~', $this->line, $m)) {
-            $this->context->addUseStatement($m[0]);
-        }
     }
 }

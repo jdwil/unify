@@ -24,12 +24,12 @@ file_put_contents('/tmp/test.php', '<?php $x = 1;'); // creates file /tmp/test.p
 // $type is 0 (FileTypeChecker::PHP)
 $type = $fileTypeChecker->determineType('/tmp/test.php');
 
-for ($i = 0; $i <= 3; $i++) {
-    $x = $i; // $x is 0, 1, 2, 3
+for ($i = 0; $i <= 4; $i++) {
+    $x = $i; // $x is 0, 1, 2, 3, 4
 }
 
 // deletes file /tmp/test.php
 $filesystem->remove('/tmp/test.php');
 
-// Always use exit() in our example PHP files.
+// Avoid false-positive on last assertion with exit()
 exit(0);

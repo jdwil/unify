@@ -10,6 +10,7 @@ use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\Server;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
@@ -23,6 +24,7 @@ class DebugSession
     const MODE_ASSERTING = 2;
     const MODE_POSTMORTEM = 3;
     const MODE_STOPPED = 4;
+    const MODE_CONTINUING = 5;
 
     private static $FLAGS = [
         'xdebug.remote_connect_back' => '1',
@@ -63,7 +65,7 @@ class DebugSession
     private $debuggerStopped;
 
     /**
-     * @var int
+     * @var int[]
      */
     private $mode;
 
@@ -103,6 +105,21 @@ class DebugSession
     private $iterations;
 
     /**
+     * @var \DOMElement
+     */
+    private $lastRunningResponse;
+
+    /**
+     * @var array
+     */
+    private $processedAssertions;
+
+    /**
+     * @var int
+     */
+    private $continuingFromLine;
+
+    /**
      * DebugSession constructor.
      * @param string $host
      * @param int $port
@@ -111,19 +128,21 @@ class DebugSession
      */
     public function __construct($host, $port, OutputInterface $output)
     {
+        $this->mode = [];
         $this->host = $host;
         $this->port = $port;
         $this->output = $output;
         $this->transaction = 1;
         $this->debuggerStopped = false;
         $this->loop = Factory::create();
-        $this->mode = self::MODE_INITIALIZE;
         $this->iterations = [];
+        $this->processedAssertions = [];
+
+        $this->setMode(self::MODE_INITIALIZE);
 
         $this->initializationCommands = [
             "feature_set -i %d -n show_hidden -v 1\0",
             "feature_set -i %d -n max_children -v 100\0",
-            //"feature_set -i %d -n extended_properties -v 1\0",
             "step_into -i %d\0",
         ];
     }
@@ -137,20 +156,7 @@ class DebugSession
     {
         $this->assertions = $testPlan->getAssertionQueue();
 
-        $attempts = 100;
-        do {
-            try {
-                $this->socket = new Server(sprintf('%s:%d', $this->host, $this->port), $this->loop);
-                $retry = false;
-            } catch (\Exception $e) {
-                $attempts--;
-                if (!$attempts) {
-                    throw $e;
-                }
-                $retry = true;
-                usleep(100);
-            }
-        } while ($retry);
+        $this->bootSocketServer();
 
         $this->socket->on('connection', function (ConnectionInterface $connection) {
             $connection->on('data', function ($data) use ($connection) {
@@ -186,78 +192,43 @@ class DebugSession
 
         if ($response->getAttribute('status') === 'stopping') {
             $this->debuggerStopped = true;
-            $this->mode = self::MODE_POSTMORTEM;
+            $this->setMode(self::MODE_POSTMORTEM);
         }
 
         if ($response->firstChild && $response->firstChild->localName === 'message') {
             $line = (int) $response->firstChild->getAttribute('lineno');
             $this->bumpIterationCount($line);
+            $this->debugOutput(sprintf('  Broke on line %d', $line));
         }
 
-        switch ($this->mode) {
-            case self::MODE_INITIALIZE:
-                $command = array_shift($this->initializationCommands);
-                if (empty($this->initializationCommands)) {
-                    $this->mode = self::MODE_RUNNING;
-                }
+        if ($this->mode() === self::MODE_CONTINUING) {
+            if (!isset($line)) {
+                throw new \LogicException('Line is not set.');
+            }
 
-                $this->send($connection, $command);
+            if ($line === $this->continuingFromLine) {
+                $this->send($connection, "step_over -i %s\0");
+                return;
+            } else {
+                $this->popMode();
+            }
+        }
+
+        switch ($this->mode()) {
+            case self::MODE_INITIALIZE:
+                $this->handleInitializationMode($connection);
                 break;
 
             case self::MODE_RUNNING:
-                $line = (int) $response->firstChild->getAttribute('lineno');
-                $assertions = $this->assertions->find($line, $this->iterationCount($line));
-                if (!$assertions->isEmpty()) {
-                    $this->assertionQueue = $assertions;
-                    $this->mode = self::MODE_ASSERTING;
-                    $this->commandStack = $this->assertionQueue->current()->getDebuggerCommands();
-                    $this->currentAssertionNumber = 1;
-                    $this->send($connection, array_shift($this->commandStack));
-                }
-
-                if ($this->mode === self::MODE_RUNNING) {
-                    $this->send($connection, "step_over -i %d\0");
-                }
+                $this->handleRunMode($response, $connection);
                 break;
 
             case self::MODE_ASSERTING:
-                $assertion = $this->assertionQueue->current();
-                $assertion->assert($response, $this->currentAssertionNumber);
-
-                if (!empty($this->commandStack)) {
-                    $this->currentAssertionNumber++;
-                    $this->send($connection, array_shift($this->commandStack));
-                    break;
-                }
-
-                $this->assertionQueue->next();
-                $this->outputAssertionResult($assertion);
-
-                if ($this->assertionQueue->isEmpty()) {
-                    if ($this->debuggerStopped) {
-                        $this->stop($connection);
-                    } else {
-                        $this->mode = self::MODE_RUNNING;
-                        $this->send($connection, "step_over -i %d\0");
-                    }
-                } else {
-                    $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
-                }
+                $this->handleAssertingMode($response, $connection);
                 break;
 
             case self::MODE_POSTMORTEM:
-                if (null !== $this->assertionQueue) {
-                    $assertions = $this->assertionQueue->find(0, 0);
-                    if (!$assertions->isEmpty()) {
-                        $this->assertionQueue = $assertions;
-                        $this->mode = self::MODE_ASSERTING;
-                        $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
-                    } else {
-                        $this->stop($connection);
-                    }
-                } else {
-                    $this->stop($connection);
-                }
+                $this->handlePostmortemMode($connection);
                 break;
 
             case self::MODE_STOPPED:
@@ -266,6 +237,138 @@ class DebugSession
         }
     }
 
+    /**
+     * @param ConnectionInterface $connection
+     */
+    protected function handleInitializationMode(ConnectionInterface $connection)
+    {
+        $command = array_shift($this->initializationCommands);
+        if (empty($this->initializationCommands)) {
+            $this->setMode(self::MODE_RUNNING);
+        }
+
+        $this->send($connection, $command);
+    }
+
+    /**
+     * @param \DOMElement $response
+     * @param ConnectionInterface $connection
+     */
+    protected function handleRunMode(\DOMElement $response, ConnectionInterface $connection)
+    {
+        $line = (int) $response->firstChild->getAttribute('lineno');
+        $assertions = $this->getUnprocessedAssertions($line, $this->iterationCount($line));
+        if ($assertions && !$assertions->isEmpty()) {
+            $this->debugOutput(sprintf('  Found assertions for line %d, iteration %d', $line, $this->iterationCount($line)));
+            $this->assertionQueue = $assertions;
+            $this->pushMode(self::MODE_ASSERTING);
+            $this->commandStack = $this->assertionQueue->current()->getDebuggerCommands();
+            $this->currentAssertionNumber = 0;
+        }
+
+        $this->pushMode(self::MODE_CONTINUING);
+        $this->continuingFromLine = $line;
+        $this->send($connection, "step_over -i %d\0");
+    }
+
+    /**
+     * @param ConnectionInterface $connection
+     */
+    protected function handlePostmortemMode(ConnectionInterface $connection)
+    {
+        if (null !== $this->assertionQueue) {
+            $assertions = $this->assertionQueue->find(0, 0);
+            if (!$assertions->isEmpty()) {
+                $this->assertionQueue = $assertions;
+                $this->pushMode(self::MODE_ASSERTING);
+                $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
+            } else {
+                $this->stop($connection);
+            }
+        } else {
+            $this->stop($connection);
+        }
+    }
+
+    /**
+     * @param \DOMElement $response
+     * @param ConnectionInterface $connection
+     */
+    protected function handleAssertingMode(\DOMElement $response, ConnectionInterface $connection)
+    {
+        /**
+         * If we haven't yet sent the first assertion command
+         * to the debugger, then we can't assert anything yet.
+         * Otherwise, send the response to the current assertion
+         * for processing.
+         */
+        if ($this->currentAssertionNumber > 0) {
+            $assertion = $this->assertionQueue->current();
+            $assertion->assert($response, $this->currentAssertionNumber);
+        } else {
+            $this->lastRunningResponse = $response;
+        }
+
+        /**
+         * Do we have more commands to execute for the current assertion?
+         */
+        if (!empty($this->commandStack)) {
+            $this->currentAssertionNumber++;
+            $this->send($connection, array_shift($this->commandStack));
+            return;
+        }
+
+        if (!isset($assertion)) {
+            throw new LogicException('$assertion is not set here. The command stack should not have been empty.');
+        }
+
+        /**
+         * Advance to the next assertion. Print output for the assertion
+         * we just finalized.
+         */
+        $this->assertionQueue->next();
+        $this->outputAssertionResult($assertion);
+
+        if ($this->assertionQueue->isEmpty()) {
+            if ($this->debuggerStopped) {
+                $this->stop($connection);
+            } else {
+                $this->popMode();
+                $this->debugOutput('  Returning to last break response.');
+                $this->handleRunMode($this->lastRunningResponse, $connection);
+                return;
+            }
+        } else {
+            $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
+        }
+    }
+
+    /**
+     * @param $line
+     * @param $iteration
+     * @return bool|AssertionQueue
+     */
+    private function getUnprocessedAssertions($line, $iteration)
+    {
+        if ($assertions = $this->assertions->find($line, $iteration)) {
+            if (!isset($this->processedAssertions[$line])) {
+                $this->processedAssertions[$line] = [];
+                $this->processedAssertions[$line][$iteration] = true;
+                return $assertions;
+            } else if (!isset($this->processedAssertions[$line][$iteration])) {
+                $this->processedAssertions[$line][$iteration] = true;
+                return $assertions;
+            } else {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param AssertionInterface $assertion
+     */
     private function outputAssertionResult(AssertionInterface $assertion)
     {
         switch ($this->output->getVerbosity()) {
@@ -297,6 +400,16 @@ class DebugSession
     }
 
     /**
+     * @param string $text
+     */
+    private function debugOutput($text)
+    {
+        if ($this->output->isDebug()) {
+            $this->output->writeln(sprintf('<info>%s</info>', $text));
+        }
+    }
+
+    /**
      * @param \DOMElement $response
      * @throws XdebugException
      */
@@ -317,11 +430,18 @@ class DebugSession
         $this->loop->stop();
     }
 
+    /**
+     * @param $line
+     * @return int|mixed
+     */
     private function iterationCount($line)
     {
         return isset($this->iterations[$line]) ? $this->iterations[$line] : 0;
     }
 
+    /**
+     * @param $line
+     */
     private function bumpIterationCount($line)
     {
         if (!isset($this->iterations[$line])) {
@@ -359,7 +479,9 @@ class DebugSession
             $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
             $command = sprintf('%s %s &', $command, $testPlan->getFile());
         } else {
-            $command = sprintf('echo %s | php', escapeshellarg($testPlan->getSource()));
+            $source = $testPlan->getSource();
+            $source .= "\n\nexit(0);";
+            $command = sprintf('echo %s | php', escapeshellarg($source));
             foreach (self::$FLAGS as $flag => $value) {
                 $command = sprintf('%s -d %s=%s', $command, $flag, $value);
             }
@@ -370,5 +492,52 @@ class DebugSession
         }
 
         return $command;
+    }
+
+    private function bootSocketServer()
+    {
+        $attempts = 100;
+        do {
+            try {
+                $this->socket = new Server(sprintf('%s:%d', $this->host, $this->port), $this->loop);
+                $retry = false;
+            } catch (\Exception $e) {
+                $attempts--;
+                if (!$attempts) {
+                    throw $e;
+                }
+                $retry = true;
+                usleep(100);
+            }
+        } while ($retry);
+    }
+
+    /**
+     * @return int
+     */
+    private function mode()
+    {
+        return end($this->mode);
+    }
+
+    /**
+     * @param int $mode
+     */
+    private function pushMode($mode)
+    {
+        $this->mode[] = $mode;
+    }
+
+    /**
+     * @param int $mode
+     */
+    private function setMode($mode)
+    {
+        $this->mode = [$mode];
+    }
+
+    private function popMode()
+    {
+        array_pop($this->mode);
     }
 }

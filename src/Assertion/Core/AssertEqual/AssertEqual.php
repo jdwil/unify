@@ -47,7 +47,9 @@ class AssertEqual extends AbstractAssertion
      */
     public function getDebuggerCommands()
     {
-        $ret = ["context_get -i %d -d 0 -c 0\0"];
+        $ret = [
+            "context_get -i %d -d 0 -c 0\0"
+        ];
 
         if ($this->valueNeedsEvaluation()) {
             $ret[] = sprintf(
