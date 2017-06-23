@@ -1,6 +1,7 @@
 {
     "name": "jdwil/unify",
     "type": "project",
+    "license": "GPLv3",
     "authors": [
         {
             "name": "JD Williams",
