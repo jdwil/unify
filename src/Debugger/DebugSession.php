@@ -12,8 +12,9 @@
 namespace JDWil\Unify\Debugger;
 
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Assertion\AssertionQueue;
+use JDWil\Unify\Assertion\PHP\PHPAssertionQueue;
 use JDWil\Unify\Exception\XdebugException;
+use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 use JDWil\Unify\TestRunner\TestPlan;
 use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
@@ -84,12 +85,12 @@ class DebugSession
     private $initializationCommands;
 
     /**
-     * @var AssertionQueue
+     * @var PHPAssertionQueue
      */
     private $assertions;
 
     /**
-     * @var AssertionQueue
+     * @var PHPAssertionQueue
      */
     private $assertionQueue;
 
@@ -157,15 +158,15 @@ class DebugSession
     }
 
     /**
-     * @param TestPlan $testPlan
-     * @return AssertionQueue
+     * @param PHPTestPlan $testPlan
+     * @return PHPAssertionQueue
      * @throws \Symfony\Component\Console\Exception\LogicException
      * @throws \Symfony\Component\Process\Exception\LogicException
      * @throws \Symfony\Component\Process\Exception\RuntimeException
      * @throws \JDWil\Unify\Exception\XdebugException
      * @throws \LogicException
      */
-    public function debugPhp(TestPlan $testPlan)
+    public function debugPhp(PHPTestPlan $testPlan)
     {
         $this->assertions = $testPlan->getAssertionQueue();
 
@@ -369,7 +370,7 @@ class DebugSession
     /**
      * @param $line
      * @param $iteration
-     * @return bool|AssertionQueue
+     * @return bool|PHPAssertionQueue
      */
     private function getUnprocessedAssertions($line, $iteration)
     {
@@ -487,12 +488,12 @@ class DebugSession
     }
 
     /**
-     * @param TestPlan $testPlan
+     * @param PHPTestPlan $testPlan
      * @return string
      */
-    private function buildRunCommand(TestPlan $testPlan)
+    private function buildRunCommand(PHPTestPlan $testPlan)
     {
-        if (null === $testPlan->getSource()) {
+        if (null === $testPlan->getSubject()) {
             $command = 'php';
             foreach (self::$FLAGS as $flag => $value) {
                 $command = sprintf('%s -d %s=%s', $command, $flag, $value);
@@ -502,7 +503,7 @@ class DebugSession
             $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
             $command = sprintf('%s %s &', $command, $testPlan->getFile());
         } else {
-            $source = $testPlan->getSource();
+            $source = $testPlan->getSubject();
             $source .= "\n\nexit(0);";
             $command = sprintf('echo %s | php', escapeshellarg($source));
             foreach (self::$FLAGS as $flag => $value) {

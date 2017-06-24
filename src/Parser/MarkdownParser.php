@@ -11,11 +11,15 @@
 
 namespace JDWil\Unify\Parser;
 
-use JDWil\Unify\TestRunner\TestPlan;
+use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
+use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
+use Phlexy\Lexer\Stateful;
 
 class MarkdownParser
 {
     private $file;
+
+    private $lexer;
 
     private $parserFactory;
 
@@ -23,28 +27,44 @@ class MarkdownParser
 
     private $autoloadPath;
 
-    public function __construct($file, ParserFactory $parserFactory, $autoloadPath)
+    public function __construct(Stateful $lexer, ParserFactory $parserFactory, $autoloadPath)
     {
-        $this->file = $file;
+        $this->lexer = $lexer;
         $this->parserFactory = $parserFactory;
         $this->autoloadPath = $autoloadPath;
         $this->testPlans = [];
     }
 
-    public function parse()
+    public function parse($file)
     {
-        if (preg_match_all('/```php(.*)```/Uims', file_get_contents($this->file), $m, PREG_SET_ORDER)) {
-            foreach ($m as $codeBlocks) {
-                $codeBlock = $codeBlocks[1];
-                $codeBlock = preg_replace('/<\?php/', sprintf('<?php require_once "%s";', $this->autoloadPath), $codeBlock, 1);
-                $codeBlock = $this->fixCodeBlock($codeBlock);
-                $parser = $this->parserFactory->createPhpParser($this->file);
-                $parser->parse($codeBlock);
-                $this->testPlans[] = new TestPlan(
-                    $this->file,
-                    $parser->getAssertions(),
-                    $codeBlock
-                );
+        $this->file = $file;
+
+        $tokens = $this->lexer->lex(file_get_contents($file));
+
+        $skipNextBlock = false;
+        foreach ($tokens as $token) {
+            switch ($token[0]) {
+                case MD_DIRECTIVE:
+                    if ($token[2] === 'skip') {
+                        $skipNextBlock = true;
+                    }
+                    break;
+
+                case MD_PHP_CODE:
+                    if ($skipNextBlock) {
+                        $skipNextBlock = false;
+                    } else {
+                        $this->createPhpTestPlan($token[2]);
+                    }
+                    break;
+
+                case MD_SHELL_CODE:
+                    if ($skipNextBlock) {
+                        $skipNextBlock = false;
+                    } else {
+                        $this->createShellTestPlan($token[2]);
+                    }
+                    break;
             }
         }
     }
@@ -52,6 +72,30 @@ class MarkdownParser
     public function getTestPlans()
     {
         return $this->testPlans;
+    }
+
+    private function createPhpTestPlan($codeBlock)
+    {
+        $codeBlock = preg_replace('/<\?php/', sprintf('<?php require_once "%s";', $this->autoloadPath), $codeBlock, 1);
+        $codeBlock = $this->fixCodeBlock($codeBlock);
+        $parser = $this->parserFactory->createPhpParser($this->file);
+        $parser->parse($codeBlock);
+        $this->testPlans[] = new PHPTestPlan(
+            $this->file,
+            $codeBlock,
+            $parser->getAssertions()
+        );
+    }
+
+    private function createShellTestPlan($codeBlock)
+    {
+        $parser = $this->parserFactory->createShellParser($this->file);
+        $parser->parse($codeBlock);
+        $this->testPlans[] = new ShellTestPlan(
+            $this->file,
+            $parser->getCommand(),
+            $parser->getAssertions()
+        );
     }
 
     private function fixCodeBlock($code)

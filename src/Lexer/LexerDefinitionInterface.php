@@ -15,36 +15,15 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\Lexer;
 
 /**
- * Interface AssertionInterface
+ * Interface LexerDefinitionInterface
  */
-interface AssertionInterface
+interface LexerDefinitionInterface
 {
     /**
-     * @return bool
+     * @return array
      */
-    public function isPass();
-
-    /**
-     * @param mixed $response
-     * @param int $responseNumber
-     */
-    public function assert($response, $responseNumber = 1);
-
-    /**
-     * @return string
-     */
-    public function __toString();
-
-    /**
-     * @return string
-     */
-    public function getFile();
-
-    /**
-     * @return int
-     */
-    public function getLine();
+    public function create();
 }

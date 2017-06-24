@@ -15,36 +15,11 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\Assertion\Shell;
 
-/**
- * Interface AssertionInterface
- */
-interface AssertionInterface
+use JDWil\Unify\Assertion\AbstractAssertionQueue;
+
+class ShellAssertionQueue extends AbstractAssertionQueue
 {
-    /**
-     * @return bool
-     */
-    public function isPass();
 
-    /**
-     * @param mixed $response
-     * @param int $responseNumber
-     */
-    public function assert($response, $responseNumber = 1);
-
-    /**
-     * @return string
-     */
-    public function __toString();
-
-    /**
-     * @return string
-     */
-    public function getFile();
-
-    /**
-     * @return int
-     */
-    public function getLine();
 }

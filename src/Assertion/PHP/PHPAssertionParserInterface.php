@@ -15,36 +15,23 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\Assertion\PHP;
+
+use JDWil\Unify\Assertion\AssertionInterface;
 
 /**
- * Interface AssertionInterface
+ * Interface AssertionMatcherInterface
  */
-interface AssertionInterface
+interface PHPAssertionParserInterface
 {
     /**
-     * @return bool
+     * @return false|AssertionInterface[]
      */
-    public function isPass();
+    public function parse();
 
     /**
-     * @param mixed $response
-     * @param int $responseNumber
+     * @param $comment
+     * @param PHPContext $context
      */
-    public function assert($response, $responseNumber = 1);
-
-    /**
-     * @return string
-     */
-    public function __toString();
-
-    /**
-     * @return string
-     */
-    public function getFile();
-
-    /**
-     * @return int
-     */
-    public function getLine();
+    public function initialize($comment, PHPContext $context);
 }

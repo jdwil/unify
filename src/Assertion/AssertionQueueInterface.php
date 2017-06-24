@@ -18,33 +18,37 @@
 namespace JDWil\Unify\Assertion;
 
 /**
- * Interface AssertionInterface
+ * Interface AssertionQueueInterface
  */
-interface AssertionInterface
+interface AssertionQueueInterface
 {
     /**
      * @return bool
      */
-    public function isPass();
+    public function isEmpty();
 
     /**
-     * @param mixed $response
-     * @param int $responseNumber
+     * @return AssertionInterface[]
      */
-    public function assert($response, $responseNumber = 1);
+    public function getQueue();
 
     /**
-     * @return string
+     * @return AssertionInterface[]
      */
-    public function __toString();
+    public function all();
 
     /**
-     * @return string
+     * @param AssertionInterface $assertion
      */
-    public function getFile();
+    public function add(AssertionInterface $assertion);
 
     /**
-     * @return int
+     * @return AssertionInterface
      */
-    public function getLine();
+    public function current();
+
+    /**
+     * @return AssertionInterface
+     */
+    public function next();
 }

@@ -31,7 +31,7 @@ define('UT_LESS_THAN_OR_EQUAL', 114);
 define('UT_FILE_PATH', 115);
 define('UT_COMMENT', 116);
 
-class LexerDefinition
+class UnifyLexerDefinition implements LexerDefinitionInterface
 {
     const VARIABLE = '\$[a-zA-Z_]\w*';
     const WHITESPACE = '[ \n\r\t]+';

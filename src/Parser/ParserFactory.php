@@ -11,8 +11,9 @@
 
 namespace JDWil\Unify\Parser;
 
-use JDWil\Unify\Assertion\Pipeline;
+use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
 use Phlexy\Lexer\Stateful;
+use Symfony\Component\DependencyInjection\Container;
 
 /**
  * Class ParserFactory
@@ -20,71 +21,87 @@ use Phlexy\Lexer\Stateful;
 class ParserFactory
 {
     /**
-     * @var FileTypeChecker
+     * @var Container
      */
-    private $fileTypeChecker;
-
-    /**
-     * @var Pipeline
-     */
-    private $pipeline;
-
-    /**
-     * @var string
-     */
-    private $autoloadPath;
-
-    /**
-     * @var Stateful
-     */
-    private $lexer;
+    private $container;
 
     /**
      * ParserFactory constructor.
-     * @param FileTypeChecker $fileTypeChecker
-     * @param Stateful $lexer
-     * @param Pipeline $pipeline
-     * @param string $autoloadPath
+     * @param Container $container
      */
-    public function __construct(FileTypeChecker $fileTypeChecker, Stateful $lexer, Pipeline $pipeline, $autoloadPath)
+    public function __construct(Container $container)
     {
-        $this->fileTypeChecker = $fileTypeChecker;
-        $this->lexer = $lexer;
-        $this->pipeline = $pipeline;
-        $this->autoloadPath = $autoloadPath;
+        $this->container = $container;
     }
 
     /**
      * @param $filePath
      * @return PHPParser
+     * @throws \Exception
      */
     public function createPhpParser($filePath)
     {
-        return new PHPParser($filePath, $this, $this->pipeline, $this->autoloadPath);
+        /** @var PHPAssertionPipeline $pipeline */
+        $pipeline = $this->container->get('php_assertion_pipeline');
+        return new PHPParser(
+            $filePath,
+            $this,
+            $pipeline,
+            $this->container->getParameter('autoload_path')
+        );
+    }
+
+    public function createMarkdownParser()
+    {
+        /** @var Stateful $lexer */
+        $lexer = $this->container->get('markdown_lexer');
+
+        return new MarkdownParser($lexer, $this, $this->container->getParameter('autoload_path'));
+    }
+
+    public function createShellParser($filePath)
+    {
+        /** @var Stateful $lexer */
+        $lexer = $this->container->get('shell_lexer');
+
+        return new ShellParser($filePath, $lexer);
     }
 
     /**
      * @return UnifyParser
+     * @throws \Exception
      */
     public function createUnifyParser()
     {
-        return new UnifyParser($this->lexer);
+        /** @var Stateful $lexer */
+        $lexer = $this->container->get('unify_lexer');
+
+        return new UnifyParser($lexer);
     }
 
     /**
      * @param $filePath
      * @return mixed
+     * @throws \Exception
      */
     public function createParser($filePath)
     {
-        $type = $this->fileTypeChecker->determineType($filePath);
+        /** @var FileTypeChecker $fileTypeChecker */
+        $fileTypeChecker = $this->container->get('file_type_checker');
+        $type = $fileTypeChecker->determineType($filePath);
 
+        $autoloadPath = $this->container->getParameter('autoload_path');
         switch ($type) {
             case FileTypeChecker::PHP:
-                return new PHPParser($filePath, $this, $this->pipeline, $this->autoloadPath);
+                /** @var PHPAssertionPipeline $pipeline */
+                $pipeline = $this->container->get('php_assertion_pipeline');
+                return new PHPParser($filePath, $this, $pipeline, $autoloadPath);
 
             case FileTypeChecker::MARKDOWN:
-                return new MarkdownParser($filePath, $this, $this->autoloadPath);
+                /** @var Stateful $lexer */
+                $lexer = $this->container->get('markdown_lexer');
+
+                return new MarkdownParser($lexer, $this, $autoloadPath);
         }
     }
 }

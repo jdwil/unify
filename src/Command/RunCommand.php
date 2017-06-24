@@ -44,7 +44,7 @@ class RunCommand extends AbstractUnifyCommand
             $file = realpath($file);
             $factory = $this->getContainer()->get('parser_factory');
             $parser = $factory->createParser($file);
-            $parser->parse();
+            $parser->parse($file);
             $testPlans = $parser->getTestPlans();
 
             $testRunner = $this->getContainer()->get('test_runner_factory')->create($output);

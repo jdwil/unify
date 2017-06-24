@@ -15,36 +15,38 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\TestRunner;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\AssertionQueueInterface;
 
 /**
- * Interface AssertionInterface
+ * Interface TestPlanInterface
  */
-interface AssertionInterface
+interface TestPlanInterface
 {
-    /**
-     * @return bool
-     */
-    public function isPass();
-
-    /**
-     * @param mixed $response
-     * @param int $responseNumber
-     */
-    public function assert($response, $responseNumber = 1);
-
-    /**
-     * @return string
-     */
-    public function __toString();
-
     /**
      * @return string
      */
     public function getFile();
 
     /**
-     * @return int
+     * @return null|string
      */
-    public function getLine();
+    public function getSubject();
+
+    /**
+     * @return AssertionQueueInterface
+     */
+    public function getAssertionQueue();
+
+    /**
+     * @return AssertionInterface[]
+     */
+    public function getAssertions();
+
+    /**
+     * @return bool
+     */
+    public function isPass();
 }

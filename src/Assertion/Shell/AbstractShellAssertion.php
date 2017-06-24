@@ -15,36 +15,54 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\Assertion\Shell;
+
+use JDWil\Unify\Assertion\AssertionInterface;
 
 /**
- * Interface AssertionInterface
+ * Class AbstractShellAssertion
  */
-interface AssertionInterface
+abstract class AbstractShellAssertion implements AssertionInterface
 {
     /**
-     * @return bool
+     * @var string
      */
-    public function isPass();
+    protected $file;
 
     /**
-     * @param mixed $response
-     * @param int $responseNumber
+     * @var int
      */
-    public function assert($response, $responseNumber = 1);
+    protected $line;
+
+    /**
+     * @var bool
+     */
+    protected $result;
+
+    /**
+     * AbstractShellAssertion constructor.
+     * @param string $file
+     * @param int $line
+     */
+    public function __construct($file, $line)
+    {
+        $this->file = $file;
+        $this->line = $line;
+    }
 
     /**
      * @return string
      */
-    public function __toString();
-
-    /**
-     * @return string
-     */
-    public function getFile();
+    public function getFile()
+    {
+        return $this->file;
+    }
 
     /**
      * @return int
      */
-    public function getLine();
+    public function getLine()
+    {
+        return $this->line;
+    }
 }

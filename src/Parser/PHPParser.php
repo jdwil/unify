@@ -11,23 +11,33 @@
 
 namespace JDWil\Unify\Parser;
 
-use JDWil\Unify\Assertion\AssertionQueue;
-use JDWil\Unify\Assertion\Context;
-use JDWil\Unify\Assertion\Pipeline;
-use JDWil\Unify\TestRunner\TestPlan;
+use JDWil\Unify\Assertion\PHP\PHPAssertionQueue;
+use JDWil\Unify\Assertion\PHP\PHPContext;
+use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
 
+/**
+ * Class PHPParser
+ */
 class PHPParser
 {
+    /**
+     * @var PHPAssertionQueue
+     */
     private $assertions;
 
+    /**
+     * @var array
+     */
     private $lines;
 
-    private $line;
-
-    private $lineNumber;
-
+    /**
+     * @var PHPAssertionPipeline
+     */
     private $pipeline;
 
+    /**
+     * @var string
+     */
     private $filePath;
 
     /**
@@ -41,7 +51,7 @@ class PHPParser
     private $index;
 
     /**
-     * @var Context
+     * @var PHPContext
      */
     private $context;
 
@@ -55,18 +65,28 @@ class PHPParser
      */
     private $factory;
 
-    public function __construct($filePath, ParserFactory $factory, Pipeline $pipeline, $autoloadPath)
+    /**
+     * PHPParser constructor.
+     * @param string $filePath
+     * @param ParserFactory $factory
+     * @param PHPAssertionPipeline $pipeline
+     * @param string $autoloadPath
+     */
+    public function __construct($filePath, ParserFactory $factory, PHPAssertionPipeline $pipeline, $autoloadPath)
     {
         $this->filePath = $filePath;
         $this->lastAssertionLine = 0;
         $this->factory = $factory;
-        $this->context = new Context();
+        $this->context = new PHPContext();
         $this->context->setFile($filePath);
         $this->context->setAutoloadPath($autoloadPath);
-        $this->assertions = new AssertionQueue();
+        $this->assertions = new PHPAssertionQueue();
         $this->pipeline = $pipeline;
     }
 
+    /**
+     * @param string|null $code
+     */
     public function parse($code = null)
     {
         if (null === $code) {
@@ -83,7 +103,6 @@ class PHPParser
             });
         }
 
-        //$this->stripWhitespace();
         $this->index = 1;
 
         while ($token = $this->next()) {
@@ -121,18 +140,18 @@ class PHPParser
         }
     }
 
-    public function getTestPlans()
-    {
-        return [
-            new TestPlan($this->filePath, $this->assertions)
-        ];
-    }
-
+    /**
+     * @return PHPAssertionQueue
+     */
     public function getAssertions()
     {
         return $this->assertions;
     }
 
+    /**
+     * @param $comment
+     * @return array|string
+     */
     protected function normalizeComment($comment)
     {
         $lines = explode("\n", $comment[1]);
@@ -163,6 +182,10 @@ class PHPParser
         return $comment;
     }
 
+    /**
+     * @param $comment
+     * @return bool
+     */
     protected function isSingleLineComment($comment)
     {
         $line = $comment[2];
@@ -176,18 +199,10 @@ class PHPParser
         return true;
     }
 
-    protected function stripWhitespace()
-    {
-        $tokens = [];
-        foreach ($this->tokens as $token) {
-            if (is_array($token) && !$this->isWhitespace($token)) {
-                $tokens[] = $token;
-            }
-        }
-
-        $this->tokens = $tokens;
-    }
-
+    /**
+     * @param $onOrAfterLine
+     * @return false|int
+     */
     protected function getNextBreakableLine($onOrAfterLine)
     {
         $i = 1;
@@ -202,6 +217,9 @@ class PHPParser
         return $this->isBreakableToken($peek) ? $peek[2] : false;
     }
 
+    /**
+     * @return string|false
+     */
     protected function getNextAssignedVariable()
     {
         $i = 1;
@@ -214,6 +232,9 @@ class PHPParser
         return $this->isVariable($peek1) ? $peek1[1] : false;
     }
 
+    /**
+     * @param int $line
+     */
     protected function seekLine($line)
     {
         foreach ($this->tokens as $index => $token) {
@@ -224,21 +245,37 @@ class PHPParser
         }
     }
 
+    /**
+     * @param array|string $token
+     * @return bool
+     */
     protected function isWhitespace($token)
     {
         return is_array($token) && $token[0] === T_WHITESPACE;
     }
 
+    /**
+     * @param array|string $token
+     * @return bool
+     */
     protected function isComment($token)
     {
         return is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true);
     }
 
+    /**
+     * @param array|string $token
+     * @return bool
+     */
     protected function isVariable($token)
     {
         return is_array($token) && $token[0] === T_VARIABLE;
     }
 
+    /**
+     * @param int $line
+     * @return array
+     */
     protected function getLineTokens($line)
     {
         $ret = [];
@@ -252,6 +289,10 @@ class PHPParser
         return $ret;
     }
 
+    /**
+     * @param array|string $token
+     * @return bool
+     */
     protected function isBreakableToken($token)
     {
         if (!is_array($token) || in_array($token[0], [
@@ -263,6 +304,9 @@ class PHPParser
         return true;
     }
 
+    /**
+     * @return bool|array
+     */
     protected function next()
     {
         if (!isset($this->tokens[$this->index])) {
@@ -272,6 +316,10 @@ class PHPParser
         return $this->tokens[$this->index++];
     }
 
+    /**
+     * @param int $advance
+     * @return bool|array
+     */
     protected function peek($advance = 1)
     {
         $i = 1;

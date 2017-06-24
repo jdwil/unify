@@ -15,36 +15,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\TestRunner\Shell;
+
+use JDWil\Unify\Assertion\Shell\Core\AssertCommandOutputEquals;
+use Symfony\Component\Process\Process;
 
 /**
- * Interface AssertionInterface
+ * Class CommandTester
  */
-interface AssertionInterface
+class CommandTester
 {
     /**
-     * @return bool
+     * @param ShellTestPlan $testPlan
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
      */
-    public function isPass();
+    public function test(ShellTestPlan $testPlan)
+    {
+        $command = $testPlan->getSubject();
+        $process = new Process($command);
+        $process->run();
+        $output = $process->getOutput();
 
-    /**
-     * @param mixed $response
-     * @param int $responseNumber
-     */
-    public function assert($response, $responseNumber = 1);
-
-    /**
-     * @return string
-     */
-    public function __toString();
-
-    /**
-     * @return string
-     */
-    public function getFile();
-
-    /**
-     * @return int
-     */
-    public function getLine();
+        /** @var AssertCommandOutputEquals $assertion */
+        foreach ($testPlan->getAssertions() as $assertion) {
+            $assertion->assert($output);
+        }
+    }
 }

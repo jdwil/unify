@@ -20,33 +20,52 @@ services:
     finder:
         factory: ['Symfony\Component\Finder\Finder', create]
 
-    lexer:
-        factory: "lexer_factory:createLexer"
-        arguments:
-            - "@=service('lexer_definition').create()"
-            - "i"
+    # Lexers
 
     lexer_data_generator:
         class: Phlexy\LexerDataGenerator
-
-    lexer_definition:
-        class: JDWil\Unify\Lexer\LexerDefinition
 
     lexer_factory:
         class: \Phlexy\LexerFactory\Stateful\UsingCompiledRegex
         arguments:
             - "@lexer_data_generator"
 
+    markdown_lexer:
+        factory: "lexer_factory:createLexer"
+        arguments:
+            - "@=service('markdown_lexer_definition').create()"
+            - "is"
+
+    markdown_lexer_definition:
+        class: JDWil\Unify\Lexer\MarkdownLexerDefinition
+
+    shell_lexer:
+        factory: "lexer_factory:createLexer"
+        arguments:
+            - "@=service('shell_lexer_definition').create()"
+            - 'is'
+
+    shell_lexer_definition:
+        class: JDWil\Unify\Lexer\ShellLexerDefinition
+
+    unify_lexer:
+        factory: "lexer_factory:createLexer"
+        arguments:
+            - "@=service('unify_lexer_definition').create()"
+            - "i"
+
+    unify_lexer_definition:
+        class: JDWil\Unify\Lexer\UnifyLexerDefinition
+
+    # Parser
+
     parser_factory:
         class: JDWil\Unify\Parser\ParserFactory
         arguments:
-            - "@file_type_checker"
-            - "@lexer"
-            - "@pipeline"
-            - "%autoload_path%"
+            - "@service_container"
 
-    pipeline:
-        factory: ['JDWil\Unify\Assertion\PipelineFactory', create]
+    php_assertion_pipeline:
+        factory: ['JDWil\Unify\Assertion\PHP\PHPPipelineFactory', create]
         arguments:
             - "@finder"
 

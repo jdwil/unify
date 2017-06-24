@@ -12,6 +12,9 @@
 namespace JDWil\Unify\TestRunner;
 
 use JDWil\Unify\Debugger\DebugSessionFactory;
+use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
+use JDWil\Unify\TestRunner\Shell\CommandTester;
+use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -21,7 +24,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class TestRunner
 {
     /**
-     * @var TestPlan[]
+     * @var TestPlanInterface[]
      */
     private $testPlans;
 
@@ -37,6 +40,8 @@ class TestRunner
 
     /**
      * TestRunner constructor.
+     * @param DebugSessionFactory $debugSessionFactory
+     * @param OutputInterface $output
      */
     public function __construct(DebugSessionFactory $debugSessionFactory, OutputInterface $output)
     {
@@ -62,8 +67,13 @@ class TestRunner
         }
 
         foreach ($this->testPlans as $testPlan) {
-            $session = $this->debugSessionFactory->create($this->output);
-            $session->debugPhp($testPlan);
+            if ($testPlan instanceof PHPTestPlan) {
+                $session = $this->debugSessionFactory->create($this->output);
+                $session->debugPhp($testPlan);
+            } else if ($testPlan instanceof ShellTestPlan) {
+                $tester = new CommandTester();
+                $tester->test($testPlan);
+            }
 
             if ($showProgress && isset($progress)) {
                 $progress->advance();
@@ -79,15 +89,15 @@ class TestRunner
     }
 
     /**
-     * @param TestPlan $testPlan
+     * @param TestPlanInterface $testPlan
      */
-    public function addTestPlan(TestPlan $testPlan)
+    public function addTestPlan(TestPlanInterface $testPlan)
     {
         $this->testPlans[] = $testPlan;
     }
 
     /**
-     * @return TestPlan[]
+     * @return TestPlanInterface[]
      */
     public function getTestPlans()
     {
@@ -113,11 +123,11 @@ class TestRunner
         $this->output->writeln('');
 
         $status = 'SUCCESS';
-        $files = $assertions = $passed = $failed = 0;
+        $testPlans = $assertions = $passed = $failed = 0;
         $failures = [];
 
         foreach ($this->testPlans as $testPlan) {
-            $files++;
+            $testPlans++;
             if (!$testPlan->isPass()) {
                 $status = 'FAILURES';
             }
@@ -143,6 +153,6 @@ class TestRunner
             $this->output->writeln('');
         }
 
-        $this->output->writeln(sprintf(' %d file(s). %d Assertions. %d/%d Passed.', $files, $assertions, $passed, $assertions));
+        $this->output->writeln(sprintf(' %d Test Plan(s). %d Assertions. %d/%d Passed.', $testPlans, $assertions, $passed, $assertions));
     }
 }

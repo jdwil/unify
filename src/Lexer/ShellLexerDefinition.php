@@ -15,36 +15,40 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\Lexer;
 
-/**
- * Interface AssertionInterface
- */
-interface AssertionInterface
+use Phlexy\Lexer\Stateful;
+
+define('SH_COMMAND_OPEN', 100);
+define('SH_COMMAND', 101);
+define('SH_COMMAND_END', 102);
+define('SH_COMMAND_OUTPUT', 103);
+
+class ShellLexerDefinition implements LexerDefinitionInterface
 {
     /**
-     * @return bool
+     * @return array
      */
-    public function isPass();
+    public function create()
+    {
+        return [
+            'INITIAL' => [
+                '[\n]*\$' => function (Stateful $parser) {
+                    $parser->swapState('COMMAND');
 
-    /**
-     * @param mixed $response
-     * @param int $responseNumber
-     */
-    public function assert($response, $responseNumber = 1);
+                    return SH_COMMAND_OPEN;
+                },
+                '.*' => SH_COMMAND_OUTPUT
+            ],
 
-    /**
-     * @return string
-     */
-    public function __toString();
+            'COMMAND' => [
+                '[^\n]+' => SH_COMMAND,
+                '\n' => function (Stateful $lexer) {
+                    $lexer->swapState('INITIAL');
 
-    /**
-     * @return string
-     */
-    public function getFile();
-
-    /**
-     * @return int
-     */
-    public function getLine();
+                    return SH_COMMAND_END;
+                }
+            ]
+        ];
+    }
 }
