@@ -20,7 +20,7 @@ namespace JDWil\Unify\Assertion\PHP;
 /**
  * Class AbstractAssertionParser
  */
-abstract class AbstractPHPPHPAssertionParser implements PHPAssertionParserInterface
+abstract class AbstractPHPAssertionParser implements PHPAssertionParserInterface
 {
     const TYPE = 0;
     const LINE = 1;

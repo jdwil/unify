@@ -17,14 +17,14 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core\AssertFileNotExists;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPPHPAssertionParser;
+use JDWil\Unify\Assertion\PHP\AbstractPHPAssertionParser;
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\PHP\PHPContext;
 
 /**
  * Class AssertFileNotExistsParser
  */
-class AssertFileNotExistsParser extends AbstractPHPPHPAssertionParser
+class AssertFileNotExistsParser extends AbstractPHPAssertionParser
 {
     /**
      * @var array

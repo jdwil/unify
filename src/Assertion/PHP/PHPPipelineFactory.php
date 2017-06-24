@@ -43,6 +43,7 @@ class PHPPipelineFactory
 
         static::$PIPELINE = new PHPAssertionPipeline();
 
+        $find = $find::create();
         $find->files()->in(__DIR__)->name('*Parser.php');
         $fileNames = [];
 

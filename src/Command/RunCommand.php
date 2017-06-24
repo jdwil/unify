@@ -24,9 +24,14 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 
 class RunCommand extends AbstractUnifyCommand
 {
+    /**
+     * @var OutputInterface
+     */
+    private $output;
 
     protected function configure()
     {
@@ -40,20 +45,57 @@ class RunCommand extends AbstractUnifyCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->output = $output;
+
+        $factory = $this->getContainer()->get('parser_factory');
+        $testRunner = $this->getContainer()->get('test_runner_factory')->create($output);
+
         if ($file = $input->getArgument('file')) {
             $file = realpath($file);
-            $factory = $this->getContainer()->get('parser_factory');
             $parser = $factory->createParser($file);
             $parser->parse($file);
-            $testPlans = $parser->getTestPlans();
-
-            $testRunner = $this->getContainer()->get('test_runner_factory')->create($output);
-            foreach ($testPlans as $testPlan) {
+            foreach ($parser->getTestPlans() as $testPlan) {
                 $testRunner->addTestPlan($testPlan);
             }
             $testRunner->execute();
 
             exit($testRunner->statusCode());
+        } else {
+            /** @var Finder $find */
+            $find = $this->getContainer()->get('finder');
+            $find = $find::create();
+            $find->files()->in(getcwd())->exclude(['vendor', 'src']);
+            $find = $this->addFinderNames($find);
+            foreach ($find as $file) {
+                $this->debug($file->getPathname());
+                $parser = $factory->createParser($file->getPathname());
+                $parser->parse($file->getPathname());
+                foreach ($parser->getTestPlans() as $testPlan) {
+                    $testRunner->addTestPlan($testPlan);
+                }
+            }
+
+            $testRunner->execute();
+        }
+    }
+
+    protected function addFinderNames(Finder $find)
+    {
+        $find
+            ->name('*.md')
+            ->name('*.markdown')
+            ->name('*.mdown')
+            ->name('*.mkdn')
+            ->name('*.php')
+        ;
+
+        return $find;
+    }
+
+    private function debug($message)
+    {
+        if ($this->output->isDebug()) {
+            $this->output->writeln(sprintf('<info>%s</info>', $message));
         }
     }
 }

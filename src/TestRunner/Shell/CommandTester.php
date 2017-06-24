@@ -17,7 +17,9 @@
 
 namespace JDWil\Unify\TestRunner\Shell;
 
+use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\Shell\Core\AssertCommandOutputEquals;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
 /**
@@ -25,6 +27,20 @@ use Symfony\Component\Process\Process;
  */
 class CommandTester
 {
+    /**
+     * @var OutputInterface
+     */
+    private $output;
+
+    /**
+     * CommandTester constructor.
+     * @param OutputInterface $output
+     */
+    public function __construct(OutputInterface $output)
+    {
+        $this->output = $output;
+    }
+
     /**
      * @param ShellTestPlan $testPlan
      * @throws \Symfony\Component\Process\Exception\RuntimeException
@@ -40,6 +56,21 @@ class CommandTester
         /** @var AssertCommandOutputEquals $assertion */
         foreach ($testPlan->getAssertions() as $assertion) {
             $assertion->assert($output);
+            $this->printTestResult($assertion);
+        }
+    }
+
+    /**
+     * @param AssertionInterface $assertion
+     */
+    private function printTestResult(AssertionInterface $assertion)
+    {
+        if ($this->output->getVerbosity() === OutputInterface::VERBOSITY_VERY_VERBOSE) {
+            if ($assertion->isPass()) {
+                $this->output->writeln(sprintf('%s... PASS', (string) $assertion));
+            } else {
+                $this->output->writeln(sprintf('%s... FAIL', (string) $assertion));
+            }
         }
     }
 }

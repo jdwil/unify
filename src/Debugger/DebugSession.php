@@ -207,6 +207,7 @@ class DebugSession
         $this->handleError($response);
 
         if ($response->getAttribute('status') === 'stopping') {
+            $this->debugOutput('  Entering postmortem');
             $this->debuggerStopped = true;
             $this->setMode(self::MODE_POSTMORTEM);
         }
@@ -409,7 +410,7 @@ class DebugSession
                 break;
 
             case OutputInterface::VERBOSITY_VERY_VERBOSE:
-                $this->output->writeln($assertion->getCodeContext());
+                //$this->output->writeln($assertion->getCodeContext());
                 if ($assertion->isPass()) {
                     $this->output->writeln(sprintf('%s... PASS', (string) $assertion));
                 } else {
@@ -449,6 +450,7 @@ class DebugSession
      */
     private function stop(ConnectionInterface $connection)
     {
+        $this->debugOutput('  Stopping loop');
         $connection->close();
         $this->socket->close();
         $this->loop->stop();

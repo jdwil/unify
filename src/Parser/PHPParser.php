@@ -14,6 +14,7 @@ namespace JDWil\Unify\Parser;
 use JDWil\Unify\Assertion\PHP\PHPAssertionQueue;
 use JDWil\Unify\Assertion\PHP\PHPContext;
 use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
+use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 
 /**
  * Class PHPParser
@@ -138,6 +139,16 @@ class PHPParser
                 }
             }
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getTestPlans()
+    {
+        return [
+            new PHPTestPlan($this->filePath, '', $this->assertions)
+        ];
     }
 
     /**

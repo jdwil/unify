@@ -34,7 +34,7 @@ can be found in the [Configuration] section.
 ### Run Unify
 
 ```shell
-$ ./bin/unify run -q
+$ ./bin/unify --help -q
 ```
 
 ### Wrapping Up
@@ -48,7 +48,7 @@ to execute. The above code is tagged as "shell" like so:
 
 ```markdown
     ```shell
-    $ ./vendor/bin/unify run -q
+    $ ./vendor/bin/unify --help -q
     ```
 ```
 

@@ -68,10 +68,12 @@ class TestRunner
 
         foreach ($this->testPlans as $testPlan) {
             if ($testPlan instanceof PHPTestPlan) {
+                $this->debug('  Executing PHP test plan');
                 $session = $this->debugSessionFactory->create($this->output);
                 $session->debugPhp($testPlan);
             } else if ($testPlan instanceof ShellTestPlan) {
-                $tester = new CommandTester();
+                $this->debug('  Executing shell test plan');
+                $tester = new CommandTester($this->output);
                 $tester->test($testPlan);
             }
 
@@ -154,5 +156,12 @@ class TestRunner
         }
 
         $this->output->writeln(sprintf(' %d Test Plan(s). %d Assertions. %d/%d Passed.', $testPlans, $assertions, $passed, $assertions));
+    }
+
+    protected function debug($message)
+    {
+        if ($this->output->isDebug()) {
+            $this->output->writeln(sprintf('<info>%s</info>', $message));
+        }
     }
 }

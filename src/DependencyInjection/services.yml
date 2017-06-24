@@ -18,7 +18,7 @@ services:
         class: Symfony\Component\Filesystem\Filesystem
 
     finder:
-        factory: ['Symfony\Component\Finder\Finder', create]
+        class: Symfony\Component\Finder\Finder
 
     # Lexers
 

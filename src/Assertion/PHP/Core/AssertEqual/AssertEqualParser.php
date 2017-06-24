@@ -17,14 +17,14 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core\AssertEqual;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPPHPAssertionParser;
+use JDWil\Unify\Assertion\PHP\AbstractPHPAssertionParser;
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\PHP\PHPContext;
 
 /**
  * Class AssertEqualParser
  */
-class AssertEqualParser extends AbstractPHPPHPAssertionParser
+class AssertEqualParser extends AbstractPHPAssertionParser
 {
     const TYPE_STRING = 'string';
     const TYPE_INTEGER = 'integer';
