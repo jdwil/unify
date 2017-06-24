@@ -44,7 +44,7 @@ did write a test. It's in the step above. Okay, I'm just being silly now :) The
 above example is not your typical use-case, but it IS a test. Let me explain.
 
 Unify parses your markdown files (or other files, as we'll see) looking for code
-to execute. The above code is tagged as "cli" like so:
+to execute. The above code is tagged as "shell" like so:
 
 ```markdown
     ```shell
@@ -52,10 +52,10 @@ to execute. The above code is tagged as "cli" like so:
     ```
 ```
 
-When Unify sees you have code blocks tagged with cli it will parse that text and
-try to interpret it. This is example is intentionally simple. "$" denotes the start
+When Unify sees you have code blocks tagged with shell it will parse that text and
+try to interpret it. This example is intentionally simple. "$" denotes the start
 of a command, which Unify will execute. The remaining lines are the expected output
-of the command. In this case, nothing, since we ran with the quite flag.
+of the command. In this case, nothing, since we ran with the quiet flag.
 
 The following would work as well:
 
@@ -152,6 +152,18 @@ This is the real power of Unify. Just by typing the example above, to help you u
 how Unify works, I've tested part of Unify itself. Every time I run my Unify test
 suite, it will execute the above block and validate all my assertions and, in a
 roundabout way, test that my documentation is correct too!
+
+Here's what it looks like when I run this entire file:
+
+```
+$ ./bin/unify run docs/markdown/Unify.md 
+ 4/4 [============================] 100%
+
+ SUCCESS
+ 4 Test Plan(s). 13 Assertions. 13/13 Passed.
+```
+
+I'll wait while you count the assertions in this file. ;) j/k. I won't wait.
 
 ### Wrapping Up (Seriously, this time)
 
