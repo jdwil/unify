@@ -15,56 +15,68 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\Shell\Core;
+declare(strict_types=1);
 
-use JDWil\Unify\Assertion\Shell\AbstractShellAssertion;
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
+namespace JDWil\Unify\TestRunner\Command;
 
 /**
- * Class AssertCommandOutputEquals
+ * Class GetValue
  */
-class AssertCommandOutputEquals extends AbstractShellAssertion
+class GetValue implements CommandInterface
 {
     /**
      * @var string
      */
-    private $expectedOutput;
+    private $variable;
 
     /**
-     * AssertCommandOutputEquals constructor.
-     * @param string $expectedOutput
-     * @param string $file
-     * @param int $line
+     * @var ResponseInterface
      */
-    public function __construct($expectedOutput, $file, $line)
-    {
-        parent::__construct($file, $line);
+    private $response;
 
-        $this->expectedOutput = $expectedOutput;
-    }
+    private function __construct() {}
 
     /**
-     * @return bool
+     * @param $variable
+     * @return GetValue
      */
-    public function isPass()
+    public static function of($variable)
     {
-        return $this->result;
-    }
+        $ret = new GetValue();
+        $ret->variable = $variable;
 
-    /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
-     */
-    public function assert(ResponseInterface $response, $responseNumber = 1)
-    {
-        $this->result = trim($response->getResponse()) === trim($this->expectedOutput);
+        return $ret;
     }
 
     /**
      * @return string
      */
-    public function __toString()
+    public function getXdebugCommand()
     {
-        return sprintf('Assert command output equals %s',$this->expectedOutput);
+        return "context_get -i %d -d 0 -c 0\0";
+    }
+
+    /**
+     * @return string
+     */
+    public function getDbgCommand()
+    {
+        return sprintf('ev %s', $this->variable);
+    }
+
+    /**
+     * @param ResponseInterface $response
+     */
+    public function setResponse(ResponseInterface $response)
+    {
+        $this->response = $response;
+    }
+
+    /**
+     * @return ResponseInterface
+     */
+    public function getResponse()
+    {
+        return $this->response;
     }
 }

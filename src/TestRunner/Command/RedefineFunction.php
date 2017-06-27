@@ -15,56 +15,66 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\Shell\Core;
-
-use JDWil\Unify\Assertion\Shell\AbstractShellAssertion;
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
+namespace JDWil\Unify\TestRunner\Command;
 
 /**
- * Class AssertCommandOutputEquals
+ * Class RedefineFunction
  */
-class AssertCommandOutputEquals extends AbstractShellAssertion
+class RedefineFunction extends AbstractCommand
 {
     /**
      * @var string
      */
-    private $expectedOutput;
+    private $functionName;
 
     /**
-     * AssertCommandOutputEquals constructor.
-     * @param string $expectedOutput
-     * @param string $file
-     * @param int $line
+     * @var string
      */
-    public function __construct($expectedOutput, $file, $line)
-    {
-        parent::__construct($file, $line);
+    private $body;
 
-        $this->expectedOutput = $expectedOutput;
+    private function __construct() {}
+
+    /**
+     * $body must be a string that contains the code for a closure.
+     *
+     * @param string $functionName
+     * @return RedefineFunction
+     */
+    public static function named($functionName)
+    {
+        $ret = new RedefineFunction();
+        $ret->functionName = $functionName;
+
+        return $ret;
     }
 
     /**
-     * @return bool
+     * @param string $body
+     * @return $this
      */
-    public function isPass()
+    public function to($body)
     {
-        return $this->result;
-    }
+        $this->body = $body;
 
-    /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
-     */
-    public function assert(ResponseInterface $response, $responseNumber = 1)
-    {
-        $this->result = trim($response->getResponse()) === trim($this->expectedOutput);
+        return $this;
     }
 
     /**
      * @return string
      */
-    public function __toString()
+    public function getXdebugCommand()
     {
-        return sprintf('Assert command output equals %s',$this->expectedOutput);
+        return sprintf(
+            "eval -i %%d -- %s\0",
+            base64_encode(sprintf('runkit_function_redefine("%s", %s);', $this->functionName, $this->body))
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getDbgCommand()
+    {
+        return sprintf("ev runkit_function_redefine('%s', %s)", $this->functionName, $this->body);
     }
 }

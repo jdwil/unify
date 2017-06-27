@@ -11,7 +11,7 @@
 
 namespace JDWil\Unify\TestRunner;
 
-use JDWil\Unify\Debugger\DebugSessionFactory;
+use JDWil\Unify\TestRunner\PHP\XDebugSessionFactory;
 use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 use JDWil\Unify\TestRunner\Shell\CommandTester;
 use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
@@ -29,7 +29,7 @@ class TestRunner
     private $testPlans;
 
     /**
-     * @var DebugSessionFactory
+     * @var XDebugSessionFactory
      */
     private $debugSessionFactory;
 
@@ -40,10 +40,10 @@ class TestRunner
 
     /**
      * TestRunner constructor.
-     * @param DebugSessionFactory $debugSessionFactory
+     * @param XDebugSessionFactory $debugSessionFactory
      * @param OutputInterface $output
      */
-    public function __construct(DebugSessionFactory $debugSessionFactory, OutputInterface $output)
+    public function __construct(XDebugSessionFactory $debugSessionFactory, OutputInterface $output)
     {
         $this->testPlans = [];
         $this->debugSessionFactory = $debugSessionFactory;
@@ -70,7 +70,7 @@ class TestRunner
             if ($testPlan instanceof PHPTestPlan) {
                 $this->debug('  Executing PHP test plan');
                 $session = $this->debugSessionFactory->create($this->output);
-                $session->debugPhp($testPlan);
+                $session->execute($testPlan);
             } else if ($testPlan instanceof ShellTestPlan) {
                 $this->debug('  Executing shell test plan');
                 $tester = new CommandTester($this->output);

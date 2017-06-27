@@ -6,7 +6,7 @@ parameters:
 services:
 
     debug_session_factory:
-        class: JDWil\Unify\Debugger\DebugSessionFactory
+        class: JDWil\Unify\TestRunner\PHP\XDebugSessionFactory
         arguments:
             - "%xdebug.host%"
             - "%xdebug.port%"

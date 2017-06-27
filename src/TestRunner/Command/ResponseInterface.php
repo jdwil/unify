@@ -15,38 +15,15 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
-
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
+namespace JDWil\Unify\TestRunner\Command;
 
 /**
- * Interface AssertionInterface
+ * Interface ResponseInterface
  */
-interface AssertionInterface
+interface ResponseInterface
 {
     /**
-     * @return bool
-     */
-    public function isPass();
-
-    /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
-     */
-    public function assert(ResponseInterface $response, $responseNumber = 1);
-
-    /**
      * @return string
      */
-    public function __toString();
-
-    /**
-     * @return string
-     */
-    public function getFile();
-
-    /**
-     * @return int
-     */
-    public function getLine();
+    public function getResponse();
 }

@@ -11,6 +11,7 @@
 
 namespace JDWil\Unify\Parser;
 
+use JDWil\Unify\Assertion\PHP\PHPAssertionInterface;
 use JDWil\Unify\Assertion\PHP\PHPAssertionQueue;
 use JDWil\Unify\Assertion\PHP\PHPContext;
 use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
@@ -34,7 +35,7 @@ class PHPParser
     /**
      * @var PHPAssertionPipeline
      */
-    private $pipeline;
+    private $assertionPipeline;
 
     /**
      * @var string
@@ -82,11 +83,12 @@ class PHPParser
         $this->context->setFile($filePath);
         $this->context->setAutoloadPath($autoloadPath);
         $this->assertions = new PHPAssertionQueue();
-        $this->pipeline = $pipeline;
+        $this->assertionPipeline = $pipeline;
     }
 
     /**
      * @param string|null $code
+     * @throws \Exception
      */
     public function parse($code = null)
     {
@@ -99,7 +101,7 @@ class PHPParser
             $this->lines = explode("\n", $code);
             array_unshift($this->lines, '');
             $this->tokens = token_get_all($code);
-            array_walk($this->lines, function (&$line, $index) {
+            array_walk($this->lines, function (&$line) {
                 $line = sprintf("%s\n", $line);
             });
         }
@@ -118,9 +120,11 @@ class PHPParser
                 $this->context->setLine($breakableLine);
                 $comment = $this->normalizeComment($token);
                 $parser = $this->factory->createUnifyParser();
+                // @todo stopped here. Need to parse "test double" code in addition to assertions.
                 if ($assertionTokenGroups = $parser->parse($comment)) {
                     foreach ($assertionTokenGroups as $assertionTokenGroup) {
-                        if ($assertions = $this->pipeline->handleComment($assertionTokenGroup, $this->context)) {
+                        if ($assertions = $this->assertionPipeline->handleComment($assertionTokenGroup, $this->context)) {
+                            /** @var PHPAssertionInterface $assertion */
                             foreach ($assertions as $assertion) {
                                 $assertion->setCodeContext(
                                     implode('', array_slice(

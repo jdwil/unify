@@ -15,38 +15,43 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion;
+namespace JDWil\Unify\TestRunner\PHP;
 
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
+use JDWil\Unify\TestRunner\PHP\XDebugSession;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Interface AssertionInterface
+ * Class DebugSessionFactory
  */
-interface AssertionInterface
+class XDebugSessionFactory
 {
     /**
-     * @return bool
+     * @var string
      */
-    public function isPass();
+    private $xdebugHost;
 
     /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
+     * @var int
      */
-    public function assert(ResponseInterface $response, $responseNumber = 1);
+    private $xdebugPort;
 
     /**
-     * @return string
+     * DebugSessionFactory constructor.
+     * @param string $xdebugHost
+     * @param int $xdebugPort
      */
-    public function __toString();
+    public function __construct($xdebugHost, $xdebugPort)
+    {
+        $this->xdebugHost = $xdebugHost;
+        $this->xdebugPort = $xdebugPort;
+    }
 
     /**
-     * @return string
+     * @param OutputInterface $output
+     * @return XDebugSession
      */
-    public function getFile();
-
-    /**
-     * @return int
-     */
-    public function getLine();
+    public function create(OutputInterface $output)
+    {
+        return new XDebugSession($this->xdebugHost, $this->xdebugPort, $output);
+    }
 }

@@ -19,6 +19,7 @@ namespace JDWil\Unify\TestRunner\Shell;
 
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\Shell\Core\AssertCommandOutputEquals;
+use JDWil\Unify\TestRunner\Command\CommandResponse;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
@@ -55,7 +56,7 @@ class CommandTester
 
         /** @var AssertCommandOutputEquals $assertion */
         foreach ($testPlan->getAssertions() as $assertion) {
-            $assertion->assert($output);
+            $assertion->assert(new CommandResponse($output));
             $this->printTestResult($assertion);
         }
     }

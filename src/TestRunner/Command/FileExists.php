@@ -15,56 +15,50 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\Shell\Core;
-
-use JDWil\Unify\Assertion\Shell\AbstractShellAssertion;
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
+namespace JDWil\Unify\TestRunner\Command;
 
 /**
- * Class AssertCommandOutputEquals
+ * Class FileExists
  */
-class AssertCommandOutputEquals extends AbstractShellAssertion
+class FileExists extends AbstractCommand
 {
     /**
      * @var string
      */
-    private $expectedOutput;
+    private $path;
+
+    private function __construct() {}
 
     /**
-     * AssertCommandOutputEquals constructor.
-     * @param string $expectedOutput
-     * @param string $file
-     * @param int $line
+     * @param string $path
+     * @return FileExists
      */
-    public function __construct($expectedOutput, $file, $line)
+    public static function atPath($path)
     {
-        parent::__construct($file, $line);
+        $ret = new FileExists();
+        $ret->path = $path;
 
-        $this->expectedOutput = $expectedOutput;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPass()
-    {
-        return $this->result;
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
-     */
-    public function assert(ResponseInterface $response, $responseNumber = 1)
-    {
-        $this->result = trim($response->getResponse()) === trim($this->expectedOutput);
+        return $ret;
     }
 
     /**
      * @return string
      */
-    public function __toString()
+    public function getXdebugCommand()
     {
-        return sprintf('Assert command output equals %s',$this->expectedOutput);
+        return sprintf(
+            "eval -i %%d -- %s\0",
+            base64_encode(
+                sprintf('file_exists(\'%s\');', $this->path)
+            )
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getDbgCommand()
+    {
+        return sprintf('ev file_exists("%s")', $this->path);
     }
 }

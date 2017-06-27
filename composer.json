@@ -23,6 +23,7 @@
         "symfony/yaml": "^3.3",
         "symfony/config": "^3.3",
         "nikic/phlexy": "^0.1.0",
-        "symfony/expression-language": "^3.3"
+        "symfony/expression-language": "^3.3",
+        "react/child-process": "dev-master"
     }
 }

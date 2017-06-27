@@ -15,56 +15,64 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\Shell\Core;
-
-use JDWil\Unify\Assertion\Shell\AbstractShellAssertion;
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
+namespace JDWil\Unify\TestRunner\Command;
 
 /**
- * Class AssertCommandOutputEquals
+ * Class XdebugResponse
  */
-class AssertCommandOutputEquals extends AbstractShellAssertion
+class XdebugResponse implements ResponseInterface
 {
     /**
      * @var string
      */
-    private $expectedOutput;
+    private $response;
 
     /**
-     * AssertCommandOutputEquals constructor.
-     * @param string $expectedOutput
-     * @param string $file
-     * @param int $line
+     * XdebugResponse constructor.
+     * @param $response
      */
-    public function __construct($expectedOutput, $file, $line)
+    public function __construct($response)
     {
-        parent::__construct($file, $line);
-
-        $this->expectedOutput = $expectedOutput;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPass()
-    {
-        return $this->result;
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
-     */
-    public function assert(ResponseInterface $response, $responseNumber = 1)
-    {
-        $this->result = trim($response->getResponse()) === trim($this->expectedOutput);
+        $this->response = $response;
     }
 
     /**
      * @return string
      */
-    public function __toString()
+    public function getResponse()
     {
-        return sprintf('Assert command output equals %s',$this->expectedOutput);
+        return $this->response;
+    }
+
+    /**
+     * @param $variable
+     * @return null|string
+     */
+    public function getValueOf($variable)
+    {
+        $document = new \DOMDocument();
+        $document->loadXML($this->response);
+        $response = $document->documentElement;
+
+        /** @var \DOMElement $child */
+        foreach ($response->childNodes as $child) {
+            if ($child->getAttribute('name') === $variable) {
+                return $child->nodeValue;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEvalResponse()
+    {
+        $document = new \DOMDocument();
+        $document->loadXML($this->response);
+        $response = $document->documentElement;
+
+        return $response->firstChild->nodeValue;
     }
 }

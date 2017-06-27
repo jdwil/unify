@@ -18,6 +18,10 @@
 namespace JDWil\Unify\Assertion\PHP\Core\AssertFileNotExists;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
+use JDWil\Unify\TestRunner\Command\DbgResponse;
+use JDWil\Unify\TestRunner\Command\FileExists;
+use JDWil\Unify\TestRunner\Command\ResponseInterface;
+use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
 /**
  * Class AssertFileNotExists
@@ -49,25 +53,22 @@ class AssertFileNotExists extends AbstractPHPAssertion
      */
     public function getDebuggerCommands()
     {
-        $ret = [];
-
-        $ret[] = sprintf(
-            "eval -i %%d -- %s\0",
-            base64_encode(
-                sprintf('!file_exists(\'%s\');', $this->filePath)
-            )
-        );
-
-        return $ret;
+        return [
+            FileExists::atPath($this->filePath)
+        ];
     }
 
     /**
-     * @param \DOMElement $response
+     * @param ResponseInterface $response
      * @param int $responseNumber
      */
-    public function assert($response, $responseNumber = 1)
+    public function assert(ResponseInterface $response, $responseNumber = 1)
     {
-        $this->result = (bool) $response->firstChild->nodeValue;
+        if ($response instanceof XdebugResponse) {
+            $this->result = ! (bool) $response->getEvalResponse();
+        } else if ($response instanceof DbgResponse) {
+            $this->result = ! (bool) $response->getResponse();
+        }
     }
 
     /**

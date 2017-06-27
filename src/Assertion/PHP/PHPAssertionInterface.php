@@ -18,6 +18,7 @@
 namespace JDWil\Unify\Assertion\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\TestRunner\Command\CommandInterface;
 
 /**
  * Interface PHPAssertionInterface
@@ -25,9 +26,7 @@ use JDWil\Unify\Assertion\AssertionInterface;
 interface PHPAssertionInterface extends AssertionInterface
 {
     /**
-     * The returned commands must contain "-i %d"
-     *
-     * @return []
+     * @return CommandInterface[]
      */
     public function getDebuggerCommands();
 

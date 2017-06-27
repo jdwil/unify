@@ -11,7 +11,7 @@
 
 namespace JDWil\Unify\TestRunner;
 
-use JDWil\Unify\Debugger\DebugSessionFactory;
+use JDWil\Unify\TestRunner\PHP\XDebugSessionFactory;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -20,15 +20,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 class TestRunnerFactory
 {
     /**
-     * @var DebugSessionFactory
+     * @var XDebugSessionFactory
      */
     private $debugSessionFactory;
 
     /**
      * TestRunnerFactory constructor.
-     * @param DebugSessionFactory $debugSessionFactory
+     * @param XDebugSessionFactory $debugSessionFactory
      */
-    public function __construct(DebugSessionFactory $debugSessionFactory)
+    public function __construct(XDebugSessionFactory $debugSessionFactory)
     {
         $this->debugSessionFactory = $debugSessionFactory;
     }

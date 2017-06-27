@@ -18,6 +18,11 @@
 namespace JDWil\Unify\Assertion\PHP\Core\AssertEqual;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
+use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\TestRunner\Command\DbgResponse;
+use JDWil\Unify\TestRunner\Command\GetValue;
+use JDWil\Unify\TestRunner\Command\ResponseInterface;
+use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
 /**
  * Class AssertEqual
@@ -56,46 +61,25 @@ class AssertEqual extends AbstractPHPAssertion
     }
 
     /**
-     * The returned command must contain "-i %d"
-     *
-     * @return array
+     * @return CommandInterface[]
      */
     public function getDebuggerCommands()
     {
-        $ret = [
-            "context_get -i %d -d 0 -c 0\0"
+        return [
+            GetValue::of($this->variable)
         ];
-
-        if ($this->valueNeedsEvaluation()) {
-            $ret[] = sprintf(
-                "eval -i %%d -- %s\0",
-                base64_encode(sprintf('%s;', $this->fullyQualifyClassConstant($this->value)))
-            );
-        }
-
-        return $ret;
     }
 
     /**
-     * @param \DOMElement $response
+     * @param ResponseInterface $response
      * @param int $responseNumber
      */
-    public function assert($response, $responseNumber = 1)
+    public function assert(ResponseInterface $response, $responseNumber = 1)
     {
-        if ($responseNumber === 1) {
-            /** @var \DOMElement $child */
-            foreach ($response->childNodes as $child) {
-                if ($child->getAttribute('name') === $this->variable) {
-                    if ($this->valueNeedsEvaluation()) {
-                        $this->internalValue = $child->nodeValue;
-                    } else {
-                        $this->result = $child->nodeValue === $this->value;
-                    }
-                }
-            }
-        } else {
-            $value = $response->firstChild->nodeValue;
-            $this->result = $value === $this->internalValue;
+        if ($response instanceof XdebugResponse) {
+            $this->result = $response->getValueOf($this->variable) === $this->value;
+        } else if ($response instanceof DbgResponse) {
+            $this->result = $response->getResponse() === $this->value;
         }
     }
 
