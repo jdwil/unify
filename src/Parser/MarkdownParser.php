@@ -84,7 +84,8 @@ class MarkdownParser
         $this->testPlans[] = new PHPTestPlan(
             $this->file,
             $codeBlock,
-            $parser->getAssertions()
+            $parser->getAssertions(),
+            $parser->getCommands()
         );
     }
 

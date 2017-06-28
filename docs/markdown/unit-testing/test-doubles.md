@@ -2,7 +2,7 @@
 <?php
 
 /**
- * foo() will return 1
+ * bar() will return 1
  */
 
 $x = bar(); // $x is 1

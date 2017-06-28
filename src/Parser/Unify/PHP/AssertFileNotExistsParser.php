@@ -15,16 +15,16 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core\AssertFileNotExists;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertionParser;
+use JDWil\Unify\Assertion\PHP\Core\AssertFileNotExists;
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Assertion\PHP\PHPContext;
+use JDWil\Unify\Parser\Unify\PHP\PHPContext;
 
 /**
  * Class AssertFileNotExistsParser
  */
-class AssertFileNotExistsParser extends AbstractPHPAssertionParser
+class AssertFileNotExistsParser extends AbstractPHPParser
 {
     /**
      * @var array

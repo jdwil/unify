@@ -15,46 +15,24 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Parser\Unify\PHP\PHPContext;
-use JDWil\Unify\TestRunner\Command\CommandInterface;
 
 /**
- * Interface PHPAssertionInterface
+ * Interface PHPParserInterface
  */
-interface PHPAssertionInterface extends AssertionInterface
+interface PHPParserInterface
 {
     /**
-     * @return CommandInterface[]
+     * @return false|AssertionInterface[]
      */
-    public function getDebuggerCommands();
+    public function parse();
 
     /**
-     * @return int|null
-     */
-    public function getIteration();
-
-    /**
-     * @param int $iteration
-     */
-    public function setIteration($iteration);
-
-    /**
-     * @return string
-     */
-    public function getCodeContext();
-
-    /**
-     * @param $code
-     */
-    public function setCodeContext($code);
-
-    /**
+     * @param array $tokens
      * @param PHPContext $context
      */
-    public function setContext(PHPContext $context);
-
-    public function __clone();
+    public function initialize($tokens, PHPContext $context);
 }

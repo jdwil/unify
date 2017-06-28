@@ -152,9 +152,6 @@ class XDebugSession extends AbstractSession
             "feature_set -i %d -n show_hidden -v 1\0",
             "feature_set -i %d -n max_children -v 100\0",
             "step_into -i %d\0",
-            sprintf("eval -i %%d -- %s\0", base64_encode('runkit_function_redefine(\'bar\', function () {
-    return 1;
-});')),
         ];
     }
 
@@ -171,6 +168,9 @@ class XDebugSession extends AbstractSession
     {
         $this->testPlan = $testPlan;
         $this->assertions = $testPlan->getAssertionQueue();
+        foreach ($this->testPlan->getCommands() as $command) {
+            $this->initializationCommands[] = $command;
+        }
 
         $this->bootSocketServer();
 

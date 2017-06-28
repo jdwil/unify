@@ -16,6 +16,7 @@
  */
 
 namespace JDWil\Unify\Assertion\PHP;
+use JDWil\Unify\Parser\Unify\PHP\PHPContext;
 
 /**
  * Class AbstractPHPAssertion

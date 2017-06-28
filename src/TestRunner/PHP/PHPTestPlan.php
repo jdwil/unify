@@ -17,9 +17,35 @@
 
 namespace JDWil\Unify\TestRunner\PHP;
 
+use JDWil\Unify\Assertion\AssertionQueueInterface;
 use JDWil\Unify\TestRunner\AbstractTestPlan;
+use JDWil\Unify\TestRunner\Command\CommandInterface;
 
 class PHPTestPlan extends AbstractTestPlan
 {
+    /**
+     * @var CommandInterface[]
+     */
+    private $commands;
 
+    /**
+     * PHPTestPlan constructor.
+     * @param string $file
+     * @param string $subject
+     * @param AssertionQueueInterface $assertionQueue
+     * @param $commands
+     */
+    public function __construct($file, $subject, AssertionQueueInterface $assertionQueue, $commands)
+    {
+        parent::__construct($file, $subject, $assertionQueue);
+        $this->commands = $commands;
+    }
+
+    /**
+     * @return CommandInterface[]
+     */
+    public function getCommands()
+    {
+        return $this->commands;
+    }
 }

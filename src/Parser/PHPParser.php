@@ -13,8 +13,10 @@ namespace JDWil\Unify\Parser;
 
 use JDWil\Unify\Assertion\PHP\PHPAssertionInterface;
 use JDWil\Unify\Assertion\PHP\PHPAssertionQueue;
-use JDWil\Unify\Assertion\PHP\PHPContext;
+use JDWil\Unify\Parser\Unify\PHP\PHPContext;
 use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
+use JDWil\Unify\Parser\Unify\PHP\PHPUnifyParserPipeline;
+use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 
 /**
@@ -28,12 +30,17 @@ class PHPParser
     private $assertions;
 
     /**
+     * @var CommandInterface[]
+     */
+    private $commands;
+
+    /**
      * @var array
      */
     private $lines;
 
     /**
-     * @var PHPAssertionPipeline
+     * @var PHPUnifyParserPipeline
      */
     private $assertionPipeline;
 
@@ -71,10 +78,10 @@ class PHPParser
      * PHPParser constructor.
      * @param string $filePath
      * @param ParserFactory $factory
-     * @param PHPAssertionPipeline $pipeline
+     * @param PHPUnifyParserPipeline $pipeline
      * @param string $autoloadPath
      */
-    public function __construct($filePath, ParserFactory $factory, PHPAssertionPipeline $pipeline, $autoloadPath)
+    public function __construct($filePath, ParserFactory $factory, PHPUnifyParserPipeline $pipeline, $autoloadPath)
     {
         $this->filePath = $filePath;
         $this->lastAssertionLine = 0;
@@ -84,6 +91,7 @@ class PHPParser
         $this->context->setAutoloadPath($autoloadPath);
         $this->assertions = new PHPAssertionQueue();
         $this->assertionPipeline = $pipeline;
+        $this->commands = [];
     }
 
     /**
@@ -123,20 +131,26 @@ class PHPParser
                 // @todo stopped here. Need to parse "test double" code in addition to assertions.
                 if ($assertionTokenGroups = $parser->parse($comment)) {
                     foreach ($assertionTokenGroups as $assertionTokenGroup) {
-                        if ($assertions = $this->assertionPipeline->handleComment($assertionTokenGroup, $this->context)) {
-                            /** @var PHPAssertionInterface $assertion */
-                            foreach ($assertions as $assertion) {
-                                $assertion->setCodeContext(
-                                    implode('', array_slice(
-                                        $this->lines,
-                                        $this->lastAssertionLine,
-                                        $token[2] + 1 - $this->lastAssertionLine
-                                    ))
-                                );
-                                $this->lastAssertionLine = $token[2];
-                                $assertion->setContext($this->context);
-                                $this->context->resetCodeContext();
-                                $this->assertions->add($assertion);
+                        $this->assertionPipeline->setContext($this->context);
+                        if ($results = $this->assertionPipeline->handle($assertionTokenGroup)) {
+                            foreach ($results as $result) {
+
+                                if ($result instanceof PHPAssertionInterface) {
+                                    $result->setCodeContext(
+                                        implode('', array_slice(
+                                            $this->lines,
+                                            $this->lastAssertionLine,
+                                            $token[2] + 1 - $this->lastAssertionLine
+                                        ))
+                                    );
+                                    $this->lastAssertionLine = $token[2];
+                                    $result->setContext($this->context);
+                                    $this->context->resetCodeContext();
+                                    $this->assertions->add($result);
+                                } else if ($result instanceof CommandInterface) {
+                                    $this->commands[] = $result;
+                                }
+
                             }
                         }
                     }
@@ -151,7 +165,7 @@ class PHPParser
     public function getTestPlans()
     {
         return [
-            new PHPTestPlan($this->filePath, '', $this->assertions)
+            new PHPTestPlan($this->filePath, '', $this->assertions, $this->commands)
         ];
     }
 
@@ -161,6 +175,14 @@ class PHPParser
     public function getAssertions()
     {
         return $this->assertions;
+    }
+
+    /**
+     * @return CommandInterface[]
+     */
+    public function getCommands()
+    {
+        return $this->commands;
     }
 
     /**

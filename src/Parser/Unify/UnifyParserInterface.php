@@ -15,23 +15,16 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP;
-
-use JDWil\Unify\Assertion\AssertionInterface;
+namespace JDWil\Unify\Parser\Unify;
 
 /**
- * Interface AssertionMatcherInterface
+ * Interface UnifyParserInterface
  */
-interface PHPAssertionParserInterface
+interface UnifyParserInterface
 {
     /**
-     * @return false|AssertionInterface[]
+     * @param array $tokens
+     * @return array
      */
-    public function parse();
-
-    /**
-     * @param $comment
-     * @param PHPContext $context
-     */
-    public function initialize($comment, PHPContext $context);
+    public function parse($tokens);
 }

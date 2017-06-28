@@ -15,7 +15,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core\AssertFileNotExists;
+namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\DbgResponse;
@@ -24,17 +24,17 @@ use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
 /**
- * Class AssertFileNotExists
+ * Class AssertFileExists
  */
-class AssertFileNotExists extends AbstractPHPAssertion
+class AssertFileExists extends AbstractPHPAssertion
 {
     /**
-     * @var array
+     * @var string
      */
     private $filePath;
 
     /**
-     * AssertFileNotExists constructor.
+     * AssertFileExists constructor.
      * @param string $filePath
      * @param int $line
      * @param int $iteration
@@ -43,6 +43,7 @@ class AssertFileNotExists extends AbstractPHPAssertion
     public function __construct($filePath, $line, $iteration, $file)
     {
         $this->filePath = $filePath;
+
         parent::__construct($line, $file, $iteration);
     }
 
@@ -65,9 +66,9 @@ class AssertFileNotExists extends AbstractPHPAssertion
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
         if ($response instanceof XdebugResponse) {
-            $this->result = ! (bool) $response->getEvalResponse();
+            $this->result = (bool) $response->getEvalResponse();
         } else if ($response instanceof DbgResponse) {
-            $this->result = ! (bool) $response->getResponse();
+            $this->result = (bool) $response->getResponse();
         }
     }
 
@@ -76,6 +77,6 @@ class AssertFileNotExists extends AbstractPHPAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert "%s" does not exist.', $this->filePath);
+        return sprintf('Assert "%s" exists.', $this->filePath);
     }
 }

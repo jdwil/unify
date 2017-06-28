@@ -12,6 +12,8 @@
 namespace JDWil\Unify\Parser;
 
 use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
+use JDWil\Unify\Parser\Unify\PHP\PHPUnifyParserPipeline;
+use JDWil\Unify\Parser\Unify\UnifyParser;
 use Phlexy\Lexer\Stateful;
 use Symfony\Component\DependencyInjection\Container;
 
@@ -41,8 +43,8 @@ class ParserFactory
      */
     public function createPhpParser($filePath)
     {
-        /** @var PHPAssertionPipeline $pipeline */
-        $pipeline = $this->container->get('php_assertion_pipeline');
+        /** @var PHPUnifyParserPipeline $pipeline */
+        $pipeline = $this->container->get('php_unify_pipeline');
         return new PHPParser(
             $filePath,
             $this,
@@ -93,8 +95,8 @@ class ParserFactory
         $autoloadPath = $this->container->getParameter('autoload_path');
         switch ($type) {
             case FileTypeChecker::PHP:
-                /** @var PHPAssertionPipeline $pipeline */
-                $pipeline = $this->container->get('php_assertion_pipeline');
+                /** @var PHPUnifyParserPipeline $pipeline */
+                $pipeline = $this->container->get('php_unify_pipeline');
                 return new PHPParser($filePath, $this, $pipeline, $autoloadPath);
 
             case FileTypeChecker::MARKDOWN:

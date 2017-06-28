@@ -15,16 +15,16 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core\AssertEqual;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertionParser;
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Assertion\PHP\PHPContext;
+use JDWil\Unify\Assertion\PHP\Core\AssertEqual;
+use JDWil\Unify\Parser\Unify\PHP\PHPContext;
 
 /**
  * Class AssertEqualParser
  */
-class AssertEqualParser extends AbstractPHPAssertionParser
+class AssertEqualParser extends AbstractPHPParser
 {
     const TYPE_STRING = 'string';
     const TYPE_INTEGER = 'integer';

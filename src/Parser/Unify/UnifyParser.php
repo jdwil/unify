@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace JDWil\Unify\Parser;
+namespace JDWil\Unify\Parser\Unify;
 
 use Phlexy\Lexer\Stateful;
 

@@ -15,58 +15,46 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core\AssertEqual;
+namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
-use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\DbgResponse;
-use JDWil\Unify\TestRunner\Command\GetValue;
+use JDWil\Unify\TestRunner\Command\FileExists;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
 /**
- * Class AssertEqual
+ * Class AssertFileNotExists
  */
-class AssertEqual extends AbstractPHPAssertion
+class AssertFileNotExists extends AbstractPHPAssertion
 {
     /**
-     * @var string
+     * @var array
      */
-    private $variable;
+    private $filePath;
 
     /**
-     * @var mixed
-     */
-    private $value;
-
-    /**
-     * @var mixed
-     */
-    private $internalValue;
-
-    /**
-     * AssertEqual constructor.
-     * @param string $variable
-     * @param $value
+     * AssertFileNotExists constructor.
+     * @param string $filePath
      * @param int $line
      * @param int $iteration
      * @param string $file
      */
-    public function __construct($variable, $value, $line, $iteration, $file)
+    public function __construct($filePath, $line, $iteration, $file)
     {
-        $this->variable = $variable;
-        $this->value = $value;
-
+        $this->filePath = $filePath;
         parent::__construct($line, $file, $iteration);
     }
 
     /**
-     * @return CommandInterface[]
+     * The returned command must contain "-i %d"
+     *
+     * @return array
      */
     public function getDebuggerCommands()
     {
         return [
-            GetValue::of($this->variable)
+            FileExists::atPath($this->filePath)
         ];
     }
 
@@ -77,9 +65,9 @@ class AssertEqual extends AbstractPHPAssertion
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
         if ($response instanceof XdebugResponse) {
-            $this->result = $response->getValueOf($this->variable) === $this->value;
+            $this->result = ! (bool) $response->getEvalResponse();
         } else if ($response instanceof DbgResponse) {
-            $this->result = $response->getResponse() === $this->value;
+            $this->result = ! (bool) $response->getResponse();
         }
     }
 
@@ -88,14 +76,6 @@ class AssertEqual extends AbstractPHPAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert %s equals %s.', $this->variable, (string) $this->value);
-    }
-
-    /**
-     * @return bool
-     */
-    private function valueNeedsEvaluation()
-    {
-        return strpos($this->value, '::') !== false;
+        return sprintf('Assert "%s" does not exist.', $this->filePath);
     }
 }

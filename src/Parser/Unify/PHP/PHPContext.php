@@ -15,7 +15,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
 class PHPContext
 {

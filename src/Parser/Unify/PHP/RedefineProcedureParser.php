@@ -15,60 +15,54 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core\AssertFileExists;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertionParser;
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Assertion\PHP\PHPContext;
+use JDWil\Unify\TestRunner\Command\RedefineFunction;
 
-/**
- * Class AssertFileExistsParser
- */
-class AssertFileExistsParser extends AbstractPHPAssertionParser
+class RedefineProcedureParser extends AbstractPHPParser
 {
-    /**
-     * @var array
-     */
-    private $files;
 
     /**
-     * @param $comment
-     * @param PHPContext $context
-     */
-    public function initialize($comment, PHPContext $context)
-    {
-        parent::initialize($comment, $context);
-
-        $this->files = [];
-    }
-
-    /**
-     * @return AssertionInterface[]|false
+     * @return false|AssertionInterface[]
      */
     public function parse()
     {
-        if (!$this->containsToken([UT_FILE_EXISTS])) {
+        if (!$this->containsToken([UT_ALWAYS_RETURN])) {
             return false;
         }
 
+        $procedure = $returnValue = null;
+
         while ($token = $this->next()) {
             switch ($token[self::TYPE]) {
-                case UT_FILE_PATH:
-                    $this->files[] = $token[self::VALUE];
+                case UT_FUNCTION_CALL:
+                case UT_METHOD_CALL:
+                    $procedure = $token[self::VALUE];
+                    break;
+
+                case UT_QUOTED_STRING:
+                case UT_INTEGER:
+                case UT_FLOAT:
+                    $returnValue = $token[self::VALUE];
                     break;
             }
         }
 
-        $assertions = [];
-        foreach ($this->files as $index => $file) {
-            $assertions[] = new AssertFileExists(
-                $file,
-                $this->context->getLine(),
-                count($this->files) > 1 ? $index + 1 : 0,
-                $this->context->getFile()
-            );
+        if ($procedure && null !== $returnValue) {
+            $procedure = preg_replace('/\([^\)]*\)/', '', $procedure);
+            return [
+                RedefineFunction::named($procedure)->to($this->getNewFunctionBody($returnValue))
+            ];
         }
+    }
 
-        return $assertions;
+    private function getNewFunctionBody($returnValue)
+    {
+        return <<<_BODY_
+function () {
+    return $returnValue;
+}
+_BODY_;
     }
 }

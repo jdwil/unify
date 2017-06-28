@@ -15,46 +15,64 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
-use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Parser\Unify\PHP\PHPContext;
-use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\Parser\Unify\UnifyParserInterface;
 
 /**
- * Interface PHPAssertionInterface
+ * Class PHPUnifyParserPipeline
  */
-interface PHPAssertionInterface extends AssertionInterface
+class PHPUnifyParserPipeline
 {
     /**
-     * @return CommandInterface[]
+     * @var PHPParserInterface[]
      */
-    public function getDebuggerCommands();
+    private $parsers;
 
     /**
-     * @return int|null
+     * @var PHPContext
      */
-    public function getIteration();
+    private $context;
 
     /**
-     * @param int $iteration
+     * UnifyParserPipeline constructor.
+     * @param PHPParserInterface[] $parsers
      */
-    public function setIteration($iteration);
-
-    /**
-     * @return string
-     */
-    public function getCodeContext();
-
-    /**
-     * @param $code
-     */
-    public function setCodeContext($code);
+    public function __construct($parsers)
+    {
+        $this->parsers = $parsers;
+    }
 
     /**
      * @param PHPContext $context
      */
-    public function setContext(PHPContext $context);
+    public function setContext(PHPContext $context)
+    {
+        $this->context = $context;
+    }
 
-    public function __clone();
+    /**
+     * @param array $tokens
+     * @return array|false
+     */
+    public function handle($tokens)
+    {
+        foreach ($this->parsers as $parser) {
+            $parser->initialize($tokens, $this->context);
+            if ($result = $parser->parse()) {
+                return $result;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param UnifyParserInterface $parser
+     */
+    public function addParser(UnifyParserInterface $parser)
+    {
+        $this->parsers[] = $parser;
+    }
 }

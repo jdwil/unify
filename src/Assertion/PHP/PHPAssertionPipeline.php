@@ -18,6 +18,8 @@
 namespace JDWil\Unify\Assertion\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Parser\Unify\PHP\PHPContext;
+use JDWil\Unify\Parser\Unify\PHP\PHPParserInterface;
 
 /**
  * Class PHPAssertionPipeline
@@ -25,7 +27,7 @@ use JDWil\Unify\Assertion\AssertionInterface;
 class PHPAssertionPipeline
 {
     /**
-     * @var PHPAssertionParserInterface[]
+     * @var PHPParserInterface[]
      */
     private $matchers;
 
@@ -38,9 +40,9 @@ class PHPAssertionPipeline
     }
 
     /**
-     * @param PHPAssertionParserInterface $matcher
+     * @param PHPParserInterface $matcher
      */
-    public function addMatcher(PHPAssertionParserInterface $matcher)
+    public function addMatcher(PHPParserInterface $matcher)
     {
         $this->matchers[] = $matcher;
     }

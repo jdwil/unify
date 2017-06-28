@@ -64,6 +64,7 @@ class RedefineFunction extends AbstractCommand
      */
     public function getXdebugCommand()
     {
+        echo sprintf('runkit_function_redefine("%s", %s);', $this->functionName, $this->body) . "\n";
         return sprintf(
             "eval -i %%d -- %s\0",
             base64_encode(sprintf('runkit_function_redefine("%s", %s);', $this->functionName, $this->body))

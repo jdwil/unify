@@ -15,12 +15,14 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP;
+namespace JDWil\Unify\Parser\Unify\PHP;
+
+use JDWil\Unify\Parser\Unify\PHP\PHPContext;
 
 /**
  * Class AbstractAssertionParser
  */
-abstract class AbstractPHPAssertionParser implements PHPAssertionParserInterface
+abstract class AbstractPHPParser implements PHPParserInterface
 {
     const TYPE = 0;
     const LINE = 1;
@@ -42,12 +44,12 @@ abstract class AbstractPHPAssertionParser implements PHPAssertionParserInterface
     protected $context;
 
     /**
-     * @param $comment
+     * @param array $tokens
      * @param PHPContext $context
      */
-    public function initialize($comment, PHPContext $context)
+    public function initialize($tokens, PHPContext $context)
     {
-        $this->tokens = $comment;
+        $this->tokens = $tokens;
         $this->context = $context;
         $this->index = -1;
     }
