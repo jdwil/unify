@@ -21,10 +21,9 @@ use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\DbgResponse;
 use JDWil\Unify\TestRunner\Command\Debugger\ArrayKey;
-use JDWil\Unify\TestRunner\Command\Debugger\GetValue;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
-use JDWil\Unify\ValueObject\LineRange;
+use JDWil\Unify\ValueObject\CodeLocation;
 
 /**
  * Class AssertArrayHasKey
@@ -45,16 +44,14 @@ class AssertArrayHasKey extends AbstractPHPAssertion
      * AssertArrayHasKey constructor.
      * @param int $arrayVariable
      * @param string $key
-     * @param LineRange $line
-     * @param string $file
      * @param int $iteration
      */
-    public function __construct($arrayVariable, $key, LineRange $line, $file, $iteration)
+    public function __construct($arrayVariable, $key, $iteration = 0)
     {
         $this->arrayVariable = $arrayVariable;
         $this->key = $key;
 
-        parent::__construct($line, $file, $iteration);
+        parent::__construct($iteration);
     }
 
     /**
@@ -64,7 +61,7 @@ class AssertArrayHasKey extends AbstractPHPAssertion
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
         if ($response instanceof XdebugResponse) {
-            $this->result = (bool) $response->getEvalResponse() == '1';
+            $this->result = (string) $response->getEvalResponse() === '1';
         } else if ($response instanceof DbgResponse) {
             $this->result = (bool) $response->getResponse();
         }

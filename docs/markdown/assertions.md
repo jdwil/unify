@@ -7,7 +7,8 @@
 1. [Arrays](#arrays)
   * [Array Has Key](#array-has-key)
 2. [Classes](#classes)
-  * [Class Has Attribute](#class-has-attribute)
+  * [Class Has Property](#class-has-property)
+  * [Class Doesn't Have Property](#class-lacks-property)
   
 <a name="arrays" />
 
@@ -58,6 +59,48 @@ function baz($i) {
 
 ## Classes
 
-<a name="class-has-attribute" />
+<a name="class-has-property" />
 
-#### Class Has Attribute
+#### Class Has Property
+
+You can check if either a fully qualified class contains a property, or if an instance of a
+class contains a property.
+
+```php
+<?php
+
+/*
+ * Foo::bar exists.
+ * $x::bar exists.
+ * $x::fiz exists.
+ * $x has property 'baz'.
+ */
+$x = new Foo();
+
+class Foo
+{
+    public static $fiz;
+    private $bar;
+    public $baz;
+}
+```
+
+<a name="class-lacks-property" />
+
+#### Class Doesn't Have Property
+
+```php
+<?php
+
+/*
+ * Foo::bar doesn't exist.
+ * $y::bar does not exist.
+ * $y doesn't have property 'bar'.
+ */
+$y = new Foo();
+
+class Foo
+{
+    public $zip;
+}
+```

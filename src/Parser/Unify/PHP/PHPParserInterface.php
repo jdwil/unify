@@ -18,7 +18,7 @@
 namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Parser\Unify\PHP\PHPContext;
+use JDWil\Unify\ValueObject\PHPContext;
 
 /**
  * Interface PHPParserInterface

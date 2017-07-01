@@ -18,50 +18,78 @@
 namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Assertion\PHP\Core\AssertArrayHasKey;
+use JDWil\Unify\Assertion\PHP\Core\AssertPropertyExists;
 
-class AssertArrayHasKeyParser extends AbstractPHPParser
+/**
+ * Class AssertPropertyExistsParser
+ */
+class AssertPropertyExistsParser extends AbstractPHPParser
 {
     /**
      * @return false|AssertionInterface[]
      */
     public function parse()
     {
-        if (!$this->containsToken([UT_ARRAY_CONTAINS_KEY])) {
+        if (!$this->containsToken($this->getValidTokens())) {
             return false;
         }
 
-        $variable = $key = null;
-
+        $classOrVariableName = $propertyName = null;
         while ($token = $this->next()) {
             switch ($token[self::TYPE]) {
+                case UT_PROPERTY_REFERENCE:
                 case UT_VARIABLE:
-                    $variable = $token[self::VALUE];
+                    $classOrVariableName = $token[self::VALUE];
                     break;
 
                 case UT_QUOTED_STRING:
-                case UT_INTEGER:
-                case UT_FLOAT:
-                    $key = $token[self::VALUE];
+                    $propertyName = $token[self::VALUE];
                     break;
             }
+        }
+
+        if (strpos($classOrVariableName, '::') !== false) {
+            list($classOrVariableName, $propertyName) = explode('::', $classOrVariableName);
+        }
+
+        if (strpos($classOrVariableName, '$') === 1) {
+            $classOrVariableName = str_replace(["'", '"'], '', $classOrVariableName);
+        }
+
+        if (!in_array($propertyName[0], ['"', "'"], true)) {
+            $propertyName = sprintf("'%s'", $propertyName);
         }
 
         if ($iterations = $this->getIterations()) {
             $ret = [];
             foreach ($iterations as $iteration) {
-                $ret[] = new AssertArrayHasKey(
-                    $variable,
-                    $key,
-                    $iteration
-                );
+                $ret[] = $this->newAssertion($classOrVariableName, $propertyName, $iteration);
             }
 
             return $ret;
         }
 
         return [
-            new AssertArrayHasKey($variable, $key)
+            $this->newAssertion($classOrVariableName, $propertyName)
         ];
+    }
+
+    /**
+     * @param string $classOrVariableName
+     * @param string $propertyName
+     * @param int $iteration
+     * @return AssertPropertyExists
+     */
+    protected function newAssertion($classOrVariableName, $propertyName, $iteration = 0)
+    {
+        return new AssertPropertyExists($classOrVariableName, $propertyName, $iteration);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getValidTokens()
+    {
+        return [UT_OBJECT_HAS_PROPERTY];
     }
 }

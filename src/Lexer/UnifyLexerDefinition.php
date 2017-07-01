@@ -36,8 +36,12 @@ define('UT_METHOD_CALL', 119);
 define('UT_END_METHOD_CALL', 120);
 define('UT_ALWAYS_RETURN', 121);
 define('UT_ARRAY_CONTAINS_KEY', 122);
-define('UT_HAS_ITERATIONS', 123);
-define('UT_ITERATION', 124);
+define('UT_ARRAY_NOT_CONTAINS_KEY', 123);
+define('UT_HAS_ITERATIONS', 124);
+define('UT_ITERATION', 125);
+define('UT_OBJECT_HAS_PROPERTY', 126);
+define('UT_OBJECT_NOT_HAS_PROPERTY', 127);
+define('UT_PROPERTY_REFERENCE', 128);
 
 /**
  * Class UnifyLexerDefinition
@@ -55,6 +59,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
     const COMMENT = '\([^\)]*\)';
     const FUNCTION_CALL = '[a-zA-Z_]\w*\([^\)]*\)';
     const METHOD_CALL = '\$?[a-zA-Z_]\w*(::)?(->)?[a-zA-Z_]\w*\([^\)]*\)';
+    const PROPERTY_REFERENCE = '\$?[a-zA-Z_]\w*::[a-zA-Z_]\w*\b';
     const END_STATEMENT = '[;\.]';
     const ITERATIONS = 'on( iterations?)?';
 
@@ -66,11 +71,14 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
         $procedureCall = [
             self::WHITESPACE => UT_WHITESPACE,
             self::COMMENT => UT_COMMENT,
-            'will( always)? return' => UT_ALWAYS_RETURN,
+
             self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
             self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
             self::FLOAT => UT_FLOAT,
             self::INTEGER => UT_INTEGER,
+
+            'will( always)? return' => UT_ALWAYS_RETURN,
+
             self::END_STATEMENT => function (Stateful $lexer) {
                 $lexer->swapState('INITIAL');
 
@@ -94,6 +102,12 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             'INITIAL' => [
                 self::WHITESPACE => UT_WHITESPACE,
                 self::COMMENT => UT_COMMENT,
+
+                self::PROPERTY_REFERENCE => function (Stateful $lexer) {
+                    $lexer->swapState('PROPERTY_REFERENCE');
+
+                    return UT_PROPERTY_REFERENCE;
+                },
                 self::VARIABLE => function (Stateful $lexer) {
                     $lexer->swapState('IN_VARIABLE');
 
@@ -140,6 +154,10 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 'has key' => UT_ARRAY_CONTAINS_KEY,
                 'is set' => UT_ARRAY_CONTAINS_KEY,
 
+                // Objects
+                'has property' => UT_OBJECT_HAS_PROPERTY,
+                'doesn?\'?t?( not)? have property' => UT_OBJECT_NOT_HAS_PROPERTY,
+
                 // Equality
                 '===' => UT_EQUALS_MATCH_TYPE,
                 '==?' => UT_EQUALS,
@@ -158,6 +176,18 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 // Misc
                 self::ITERATIONS => $iterations,
                 ',' => UT_MORE,
+                self::END_STATEMENT => $endAssertion
+            ],
+
+            'PROPERTY_REFERENCE' => [
+                self::WHITESPACE => UT_WHITESPACE,
+                self::COMMENT => UT_COMMENT,
+                self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
+                self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
+
+                'exists' => UT_OBJECT_HAS_PROPERTY,
+                'doesn?\'?t?( not)? exist' => UT_OBJECT_NOT_HAS_PROPERTY,
+
                 self::END_STATEMENT => $endAssertion
             ],
 

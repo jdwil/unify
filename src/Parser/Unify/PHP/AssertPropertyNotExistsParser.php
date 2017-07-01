@@ -15,36 +15,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
-use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\ValueObject\PHPContext;
-use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\Assertion\PHP\Core\AssertPropertyNotExists;
 
 /**
- * Interface PHPAssertionInterface
+ * Class AssertPropertyNotExistsParser
  */
-interface PHPAssertionInterface extends AssertionInterface
+class AssertPropertyNotExistsParser extends AssertPropertyExistsParser
 {
     /**
-     * @return CommandInterface[]
-     */
-    public function getDebuggerCommands();
-
-    /**
-     * @return int|null
-     */
-    public function getIteration();
-
-    /**
+     * @param string $classOrVariableName
+     * @param string $propertyName
      * @param int $iteration
+     * @return AssertPropertyNotExists
      */
-    public function setIteration($iteration);
+    protected function newAssertion($classOrVariableName, $propertyName, $iteration = 0)
+    {
+        return new AssertPropertyNotExists($classOrVariableName, $propertyName, $iteration);
+    }
 
     /**
-     * @param PHPContext $context
+     * @return array
      */
-    public function setContext(PHPContext $context);
-
-    public function __clone();
+    protected function getValidTokens()
+    {
+        return [UT_OBJECT_NOT_HAS_PROPERTY];
+    }
 }

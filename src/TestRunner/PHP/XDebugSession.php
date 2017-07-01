@@ -376,6 +376,7 @@ class XDebugSession extends AbstractSession
             $current = $this->assertionQueue->current();
             $this->commandStack = $current->getDebuggerCommands();
             $this->currentAssertionNumber = 0;
+            $this->debugOutput('   Returning to handleAssertingMode');
             $this->handleAssertingMode($response, $connection, false);
         }
     }

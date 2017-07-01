@@ -22,7 +22,6 @@ use JDWil\Unify\TestRunner\Command\DbgResponse;
 use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
-use JDWil\Unify\ValueObject\LineRange;
 
 /**
  * Class AssertFileExists
@@ -37,15 +36,13 @@ class AssertFileExists extends AbstractPHPAssertion
     /**
      * AssertFileExists constructor.
      * @param string $filePath
-     * @param LineRange $line
      * @param int $iteration
-     * @param string $file
      */
-    public function __construct($filePath, LineRange $line, $iteration, $file)
+    public function __construct($filePath, $iteration)
     {
         $this->filePath = $filePath;
 
-        parent::__construct($line, $file, $iteration);
+        parent::__construct($iteration);
     }
 
     /**

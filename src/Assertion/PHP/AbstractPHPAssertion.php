@@ -16,7 +16,8 @@
  */
 
 namespace JDWil\Unify\Assertion\PHP;
-use JDWil\Unify\Parser\Unify\PHP\PHPContext;
+
+use JDWil\Unify\ValueObject\PHPContext;
 use JDWil\Unify\ValueObject\LineRange;
 
 /**
@@ -25,29 +26,14 @@ use JDWil\Unify\ValueObject\LineRange;
 abstract class AbstractPHPAssertion implements PHPAssertionInterface
 {
     /**
-     * @var LineRange
-     */
-    protected $line;
-
-    /**
-     * @var int|null
+     * @var int
      */
     protected $iteration;
-
-    /**
-     * @var string
-     */
-    protected $file;
 
     /**
      * @var bool
      */
     protected $result;
-
-    /**
-     * @var string
-     */
-    protected $codeContext;
 
     /**
      * @var PHPContext
@@ -56,15 +42,10 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
 
     /**
      * AbstractAssertion constructor.
-     * @param LineRange $line
-     * @param string $file
      * @param int $iteration
      */
-    public function __construct(LineRange $line, $file, $iteration)
+    public function __construct($iteration)
     {
-        $this->line = $line;
-        $this->file = $file;
-        $this->codeContext = '';
         $this->iteration = $iteration;
     }
 
@@ -73,7 +54,7 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
      */
     public function getLine()
     {
-        return $this->line;
+        return $this->context->getLine();
     }
 
     /**
@@ -81,9 +62,8 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
      */
     public function getFile()
     {
-        return $this->file;
+        return $this->context->getFile();
     }
-
 
     /**
      * @return bool
@@ -91,22 +71,6 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
     public function isPass()
     {
         return $this->result;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCodeContext()
-    {
-        return $this->codeContext;
-    }
-
-    /**
-     * @param $code
-     */
-    public function setCodeContext($code)
-    {
-        $this->codeContext = $code;
     }
 
     /**
@@ -118,7 +82,7 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
     }
 
     /**
-     * @return int|null
+     * @return int
      */
     public function getIteration()
     {
@@ -126,7 +90,7 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
     }
 
     /**
-     * @param int|null $iteration
+     * @param int $iteration
      */
     public function setIteration($iteration)
     {

@@ -15,9 +15,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Parser\Unify\PHP;
-
-use JDWil\Unify\ValueObject\LineRange;
+namespace JDWil\Unify\ValueObject;
 
 class PHPContext
 {

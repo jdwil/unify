@@ -19,6 +19,7 @@ namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\PHP\Core\AssertEqual;
+use JDWil\Unify\ValueObject\PHPContext;
 
 /**
  * Class AssertEqualParser
@@ -97,9 +98,7 @@ class AssertEqualParser extends AbstractPHPParser
                 $assertions[] = new AssertEqual(
                     $this->variable,
                     $this->values[$i - 1],
-                    $this->context->getLine(),
-                    $num > 1 ? $i : 0,
-                    $this->context->getFile()
+                    $num > 1 ? $i : 0
                 );
             }
         }

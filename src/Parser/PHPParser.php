@@ -13,7 +13,7 @@ namespace JDWil\Unify\Parser;
 
 use JDWil\Unify\Assertion\PHP\PHPAssertionInterface;
 use JDWil\Unify\Assertion\PHP\PHPAssertionQueue;
-use JDWil\Unify\Parser\Unify\PHP\PHPContext;
+use JDWil\Unify\ValueObject\PHPContext;
 use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
 use JDWil\Unify\Parser\Unify\PHP\PHPUnifyParserPipeline;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
@@ -138,16 +138,7 @@ class PHPParser
                             foreach ($results as $result) {
 
                                 if ($result instanceof PHPAssertionInterface) {
-                                    $result->setCodeContext(
-                                        implode('', array_slice(
-                                            $this->lines,
-                                            $this->lastAssertionLine,
-                                            $token[2] + 1 - $this->lastAssertionLine
-                                        ))
-                                    );
-                                    $this->lastAssertionLine = $token[2];
-                                    $result->setContext($this->context);
-                                    $this->context->resetCodeContext();
+                                    $result->setContext($this->buildContext());
                                     $this->assertions->add($result);
                                 } else if ($result instanceof CommandInterface) {
                                     $this->commands[] = $result;
@@ -210,6 +201,18 @@ class PHPParser
         $this->index = $start;
 
         return new LineRange($line, $end);
+    }
+
+    /**
+     * @return PHPContext
+     */
+    protected function buildContext()
+    {
+        $ret = new PHPContext();
+        $ret->setFile($this->context->getFile());
+        $ret->setLine($this->context->getLine());
+
+        return $ret;
     }
 
     /**

@@ -20,52 +20,37 @@ namespace JDWil\Unify\Assertion\PHP\Core;
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\DbgResponse;
-use JDWil\Unify\TestRunner\Command\Debugger\GetValue;
+use JDWil\Unify\TestRunner\Command\Debugger\PropertyExists;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
 /**
- * Class AssertEqual
+ * Class AssertPropertyExists
  */
-class AssertEqual extends AbstractPHPAssertion
+class AssertPropertyExists extends AbstractPHPAssertion
 {
     /**
      * @var string
      */
-    private $variable;
+    private $classOrVariableName;
 
     /**
-     * @var mixed
+     * @var string
      */
-    private $value;
+    private $propertyName;
 
     /**
-     * @var mixed
-     */
-    private $internalValue;
-
-    /**
-     * AssertEqual constructor.
-     * @param string $variable
-     * @param mixed $value
+     * AssertPropertyExists constructor.
+     * @param string $classOrVariableName
+     * @param string $propertyName
      * @param int $iteration
      */
-    public function __construct($variable, $value, $iteration)
+    public function __construct($classOrVariableName, $propertyName, $iteration = 0)
     {
-        $this->variable = $variable;
-        $this->value = $value;
+        $this->classOrVariableName = $classOrVariableName;
+        $this->propertyName = $propertyName;
 
         parent::__construct($iteration);
-    }
-
-    /**
-     * @return CommandInterface[]
-     */
-    public function getDebuggerCommands()
-    {
-        return [
-            GetValue::of($this->variable)
-        ];
     }
 
     /**
@@ -75,9 +60,9 @@ class AssertEqual extends AbstractPHPAssertion
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
         if ($response instanceof XdebugResponse) {
-            $this->result = $response->getValueOf($this->variable) === $this->value;
+            $this->result = (bool) $response->getEvalResponse();
         } else if ($response instanceof DbgResponse) {
-            $this->result = $response->getResponse() === $this->value;
+            $this->result = (bool) $response->getResponse();
         }
     }
 
@@ -86,14 +71,16 @@ class AssertEqual extends AbstractPHPAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert %s equals %s.', $this->variable, (string) $this->value);
+        return sprintf('Assert %s has property %s', $this->classOrVariableName, $this->propertyName);
     }
 
     /**
-     * @return bool
+     * @return CommandInterface[]
      */
-    private function valueNeedsEvaluation()
+    public function getDebuggerCommands()
     {
-        return strpos($this->value, '::') !== false;
+        return [
+            PropertyExists::on($this->classOrVariableName)->named($this->propertyName)
+        ];
     }
 }

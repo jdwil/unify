@@ -37,14 +37,13 @@ class AssertFileNotExists extends AbstractPHPAssertion
     /**
      * AssertFileNotExists constructor.
      * @param string $filePath
-     * @param LineRange $line
      * @param int $iteration
-     * @param string $file
      */
-    public function __construct($filePath, LineRange $line, $iteration, $file)
+    public function __construct($filePath, $iteration)
     {
         $this->filePath = $filePath;
-        parent::__construct($line, $file, $iteration);
+
+        parent::__construct($iteration);
     }
 
     /**

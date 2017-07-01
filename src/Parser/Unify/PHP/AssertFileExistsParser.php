@@ -19,7 +19,7 @@ namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\PHP\Core\AssertFileExists;
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Parser\Unify\PHP\PHPContext;
+use JDWil\Unify\ValueObject\PHPContext;
 
 /**
  * Class AssertFileExistsParser
@@ -63,9 +63,7 @@ class AssertFileExistsParser extends AbstractPHPParser
         foreach ($this->files as $index => $file) {
             $assertions[] = new AssertFileExists(
                 $file,
-                $this->context->getLine(),
-                count($this->files) > 1 ? $index + 1 : 0,
-                $this->context->getFile()
+                count($this->files) > 1 ? $index + 1 : 0
             );
         }
 
