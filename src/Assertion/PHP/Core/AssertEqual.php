@@ -20,9 +20,10 @@ namespace JDWil\Unify\Assertion\PHP\Core;
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\DbgResponse;
-use JDWil\Unify\TestRunner\Command\GetValue;
+use JDWil\Unify\TestRunner\Command\Debugger\GetValue;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
+use JDWil\Unify\ValueObject\LineRange;
 
 /**
  * Class AssertEqual
@@ -48,11 +49,11 @@ class AssertEqual extends AbstractPHPAssertion
      * AssertEqual constructor.
      * @param string $variable
      * @param $value
-     * @param int $line
+     * @param LineRange $line
      * @param int $iteration
      * @param string $file
      */
-    public function __construct($variable, $value, $line, $iteration, $file)
+    public function __construct($variable, $value, LineRange $line, $iteration, $file)
     {
         $this->variable = $variable;
         $this->value = $value;

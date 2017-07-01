@@ -141,7 +141,7 @@ class TestRunner
                 } else {
                     $failed++;
                     $failures[] = [
-                        'file' => sprintf('%s:%d', $assertion->getFile(), $assertion->getLine()),
+                        'file' => sprintf('%s:%s', $assertion->getFile(), $assertion->getLine()),
                         'assertion' => (string) $assertion
                     ];
                 }

@@ -104,4 +104,31 @@ abstract class AbstractPHPParser implements PHPParserInterface
 
         return false;
     }
+
+    /**
+     * @return array|false
+     */
+    protected function getIterations()
+    {
+        $start = $this->index;
+        $this->reset();
+
+        $iterations = false;
+
+        while ($token = $this->next()) {
+            switch ($token[self::TYPE]) {
+                case UT_HAS_ITERATIONS:
+                    $iterations = [];
+                    break;
+
+                case UT_ITERATION:
+                    $iterations[] = $token[self::VALUE];
+                    break;
+            }
+        }
+
+        $this->index = $start;
+
+        return $iterations;
+    }
 }

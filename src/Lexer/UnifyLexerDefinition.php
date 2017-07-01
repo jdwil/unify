@@ -35,13 +35,16 @@ define('UT_END_FUNCTION_CALL', 118);
 define('UT_METHOD_CALL', 119);
 define('UT_END_METHOD_CALL', 120);
 define('UT_ALWAYS_RETURN', 121);
+define('UT_ARRAY_CONTAINS_KEY', 122);
+define('UT_HAS_ITERATIONS', 123);
+define('UT_ITERATION', 124);
 
 /**
  * Class UnifyLexerDefinition
  */
 class UnifyLexerDefinition implements LexerDefinitionInterface
 {
-    const VARIABLE = '\$[a-zA-Z_]\w*';
+    const VARIABLE = '\$[a-zA-Z_]\w*(\[[^\]]+\])*';
     const WHITESPACE = '[ \n\r\t]+';
     const SINGLE_QUOTED_STRING = '\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\'';
     const DOUBLE_QUOTED_STRING = '"[^"\\\\${]*(?:(?:\\\\.|\$(?!\{|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)|\{(?!\$))[^"\\\\${]*)*"';
@@ -53,6 +56,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
     const FUNCTION_CALL = '[a-zA-Z_]\w*\([^\)]*\)';
     const METHOD_CALL = '\$?[a-zA-Z_]\w*(::)?(->)?[a-zA-Z_]\w*\([^\)]*\)';
     const END_STATEMENT = '[;\.]';
+    const ITERATIONS = 'on( iterations?)?';
 
     /**
      * @return array
@@ -73,6 +77,18 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 return UT_END_FUNCTION_CALL;
             }
         ];
+
+        $iterations = function (Stateful $lexer) {
+            $lexer->swapState('ITERATIONS');
+
+            return UT_HAS_ITERATIONS;
+        };
+
+        $endAssertion = function (Stateful $lexer) {
+            $lexer->swapState('INITIAL');
+
+            return UT_END_ASSERTION;
+        };
 
         return [
             'INITIAL' => [
@@ -111,12 +127,20 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             'METHOD_CALL' => $procedureCall,
 
             'IN_VARIABLE' => [
+
+                // Internal types
                 self::WHITESPACE => UT_WHITESPACE,
                 self::COMMENT => UT_COMMENT,
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::FLOAT => UT_FLOAT,
                 self::INTEGER => UT_INTEGER,
+
+                // Arrays
+                'has key' => UT_ARRAY_CONTAINS_KEY,
+                'is set' => UT_ARRAY_CONTAINS_KEY,
+
+                // Equality
                 '===' => UT_EQUALS_MATCH_TYPE,
                 '==?' => UT_EQUALS,
                 '>' => UT_GREATER_THAN,
@@ -130,12 +154,11 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 'is equal to' => UT_EQUALS,
                 'is' => UT_EQUALS,
                 'equals' => UT_EQUALS,
-                ',' => UT_MORE,
-                self::END_STATEMENT => function (Stateful $lexer) {
-                    $lexer->swapState('INITIAL');
 
-                    return UT_END_ASSERTION;
-                }
+                // Misc
+                self::ITERATIONS => $iterations,
+                ',' => UT_MORE,
+                self::END_STATEMENT => $endAssertion
             ],
 
             'IN_FILE' => [
@@ -144,11 +167,15 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::QUOTED_FILE_PATH => UT_FILE_PATH,
                 self::UNQUOTED_FILE_PATH => UT_FILE_PATH,
                 ',' => UT_MORE,
-                self::END_STATEMENT => function (Stateful $lexer) {
-                    $lexer->swapState('INITIAL');
+                self::END_STATEMENT => $endAssertion
+            ],
 
-                    return UT_END_ASSERTION;
-                }
+            'ITERATIONS' => [
+                self::WHITESPACE => UT_WHITESPACE,
+                self::COMMENT => UT_COMMENT,
+                '\d+' => UT_ITERATION,
+                ',' => UT_MORE,
+                self::END_STATEMENT => $endAssertion,
             ]
         ];
     }

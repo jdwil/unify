@@ -15,28 +15,38 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\TestRunner\Command;
+namespace JDWil\Unify\TestRunner\Command\Debugger;
+
+use JDWil\Unify\TestRunner\Command\AbstractCommand;
 
 /**
- * Class FileExists
+ * Class ArrayKey
  */
-class FileExists extends AbstractCommand
+class ArrayKey extends AbstractCommand
 {
+    const EXISTS = 0;
+
     /**
      * @var string
      */
-    private $path;
+    private $variable;
+
+    /**
+     * @var int
+     */
+    private $type;
 
     private function __construct() {}
 
     /**
-     * @param string $path
-     * @return FileExists
+     * @param string $variable
+     * @return ArrayKey
      */
-    public static function atPath($path)
+    public static function exists($variable)
     {
-        $ret = new FileExists();
-        $ret->path = $path;
+        $ret = new ArrayKey();
+        $ret->variable = $variable;
+        $ret->type = self::EXISTS;
 
         return $ret;
     }
@@ -46,12 +56,13 @@ class FileExists extends AbstractCommand
      */
     public function getXdebugCommand()
     {
-        return sprintf(
-            "eval -i %%d -- %s\0",
-            base64_encode(
-                sprintf('file_exists(\'%s\');', $this->path)
-            )
-        );
+        switch($this->type) {
+            case self::EXISTS:
+                return sprintf(
+                    "eval -i %%d -- %s\0",
+                    base64_encode(sprintf('isset(%s)', $this->variable))
+                );
+        }
     }
 
     /**
@@ -59,6 +70,9 @@ class FileExists extends AbstractCommand
      */
     public function getDbgCommand()
     {
-        return sprintf('ev file_exists("%s")', $this->path);
+        switch ($this->type) {
+            case self::EXISTS:
+                return sprintf('ev isset(%s)', $this->variable);
+        }
     }
 }

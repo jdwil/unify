@@ -18,6 +18,7 @@
 namespace JDWil\Unify\Assertion;
 
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
+use JDWil\Unify\ValueObject\LineRange;
 
 /**
  * Interface AssertionInterface
@@ -46,7 +47,7 @@ interface AssertionInterface
     public function getFile();
 
     /**
-     * @return int
+     * @return LineRange
      */
     public function getLine();
 }

@@ -138,7 +138,6 @@ class XDebugSession extends AbstractSession
     {
         parent::__construct($output);
 
-        $this->mode = [];
         $this->host = $host;
         $this->port = $port;
         $this->transaction = 1;
@@ -322,10 +321,14 @@ class XDebugSession extends AbstractSession
     /**
      * @param \DOMElement $response
      * @param ConnectionInterface $connection
-     * @throws \Symfony\Component\Console\Exception\LogicException
+     * @param bool $saveLastRunningResponse
+     * @throws \LogicException
      */
-    protected function handleAssertingMode(\DOMElement $response, ConnectionInterface $connection)
-    {
+    protected function handleAssertingMode(
+        \DOMElement $response,
+        ConnectionInterface $connection,
+        $saveLastRunningResponse = true
+    ) {
         /**
          * If we haven't yet sent the first assertion command
          * to the debugger, then we can't assert anything yet.
@@ -335,7 +338,7 @@ class XDebugSession extends AbstractSession
         if ($this->currentAssertionNumber > 0) {
             $assertion = $this->assertionQueue->current();
             $assertion->assert(new XdebugResponse($this->lastResponse), $this->currentAssertionNumber);
-        } else {
+        } else if ($saveLastRunningResponse) {
             $this->lastRunningResponse = $response;
         }
 
@@ -369,8 +372,11 @@ class XDebugSession extends AbstractSession
                 return;
             }
         } else {
-            // @todo fix
-            $this->send($connection, $this->assertionQueue->current()->getDebuggerCommands());
+            /** @var PHPAssertionInterface $current */
+            $current = $this->assertionQueue->current();
+            $this->commandStack = $current->getDebuggerCommands();
+            $this->currentAssertionNumber = 0;
+            $this->handleAssertingMode($response, $connection, false);
         }
     }
 
@@ -494,7 +500,13 @@ class XDebugSession extends AbstractSession
         }
 
         if ($this->output->isDebug()) {
-            $this->output->writeln(sprintf("  %s\n", sprintf($command, $this->transaction)));
+            if (strpos($command, '--') !== false) {
+                list($start, $base64) = explode(' -- ', $command);
+                $plain = sprintf('%s -- %s', $start, base64_decode($base64));
+                $this->output->writeln(sprintf("  %s\n", sprintf($plain, $this->transaction)));
+            } else {
+                $this->output->writeln(sprintf("  %s\n", sprintf($command, $this->transaction)));
+            }
         }
         $connection->write(sprintf($command, $this->transaction++));
     }

@@ -15,52 +15,52 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP;
+namespace JDWil\Unify\TestRunner\Command\Debugger;
 
-use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\Parser\Unify\PHP\PHPContext;
-use JDWil\Unify\Parser\Unify\PHP\PHPParserInterface;
+use JDWil\Unify\TestRunner\Command\AbstractCommand;
 
 /**
- * Class PHPAssertionPipeline
+ * Class FileExists
  */
-class PHPAssertionPipeline
+class FileExists extends AbstractCommand
 {
     /**
-     * @var PHPParserInterface[]
+     * @var string
      */
-    private $matchers;
+    private $path;
+
+    private function __construct() {}
 
     /**
-     * Pipeline constructor.
+     * @param string $path
+     * @return FileExists
      */
-    public function __construct()
+    public static function atPath($path)
     {
-        $this->matchers = [];
+        $ret = new FileExists();
+        $ret->path = $path;
+
+        return $ret;
     }
 
     /**
-     * @param PHPParserInterface $matcher
+     * @return string
      */
-    public function addMatcher(PHPParserInterface $matcher)
+    public function getXdebugCommand()
     {
-        $this->matchers[] = $matcher;
+        return sprintf(
+            "eval -i %%d -- %s\0",
+            base64_encode(
+                sprintf('file_exists(\'%s\');', $this->path)
+            )
+        );
     }
 
     /**
-     * @param array $comment
-     * @param PHPContext $context
-     * @return bool|false|AssertionInterface[]
+     * @return string
      */
-    public function handleComment($comment, PHPContext $context)
+    public function getDbgCommand()
     {
-        foreach ($this->matchers as $matcher) {
-            $matcher->initialize($comment, $context);
-            if ($assertion = $matcher->parse()) {
-                return $assertion;
-            }
-        }
-
-        return false;
+        return sprintf('ev file_exists("%s")', $this->path);
     }
 }

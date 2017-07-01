@@ -9,4 +9,4 @@ like Behat.
 
 ## Documentation
 
-The full documentation can be found [here](docs/markdown/Unify.md).
+The full documentation can be found [here](docs/markdown/unify.md).

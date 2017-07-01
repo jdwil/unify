@@ -15,12 +15,14 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\TestRunner\Command;
+namespace JDWil\Unify\TestRunner\Command\Debugger;
+
+use JDWil\Unify\TestRunner\Command\AbstractCommand;
 
 /**
  * Class RedefineFunction
  */
-class RedefineFunction extends AbstractCommand
+class RedefineProcedure extends AbstractCommand
 {
     /**
      * @var string
@@ -38,11 +40,11 @@ class RedefineFunction extends AbstractCommand
      * $body must be a string that contains the code for a closure.
      *
      * @param string $functionName
-     * @return RedefineFunction
+     * @return RedefineProcedure
      */
     public static function named($functionName)
     {
-        $ret = new RedefineFunction();
+        $ret = new RedefineProcedure();
         $ret->functionName = $functionName;
 
         return $ret;
@@ -52,7 +54,7 @@ class RedefineFunction extends AbstractCommand
      * @param string $body
      * @return $this
      */
-    public function to($body)
+    public function toExecute($body)
     {
         $this->body = $body;
 
@@ -64,7 +66,15 @@ class RedefineFunction extends AbstractCommand
      */
     public function getXdebugCommand()
     {
-        echo sprintf('runkit_function_redefine("%s", %s);', $this->functionName, $this->body) . "\n";
+        if ($this->isMethod()) {
+            list($class, $method) = explode('::', $this->functionName);
+
+            return sprintf(
+                "eval -i %%d -- %s\0",
+                base64_encode(sprintf('runkit_method_redefine("%s", "%s", %s);', $class, $method, $this->body))
+            );
+        }
+
         return sprintf(
             "eval -i %%d -- %s\0",
             base64_encode(sprintf('runkit_function_redefine("%s", %s);', $this->functionName, $this->body))
@@ -76,6 +86,20 @@ class RedefineFunction extends AbstractCommand
      */
     public function getDbgCommand()
     {
+        if ($this->isMethod()) {
+            list($class, $method) = explode('::', $this->functionName);
+
+            return sprintf("ev runkit_method_redefine('%s', '%s', %s)", $class, $method, $this->body);
+        }
+
         return sprintf("ev runkit_function_redefine('%s', %s)", $this->functionName, $this->body);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isMethod()
+    {
+        return strpos($this->functionName, '::') !== false;
     }
 }

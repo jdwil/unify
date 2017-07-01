@@ -18,51 +18,52 @@
 namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\TestRunner\Command\Debugger\RedefineProcedure;
+use JDWil\Unify\Assertion\PHP\Core\AssertArrayHasKey;
 
-class RedefineProcedureParser extends AbstractPHPParser
+class AssertArrayHasKeyParser extends AbstractPHPParser
 {
-
     /**
      * @return false|AssertionInterface[]
      */
     public function parse()
     {
-        if (!$this->containsToken([UT_ALWAYS_RETURN])) {
+        if (!$this->containsToken([UT_ARRAY_CONTAINS_KEY])) {
             return false;
         }
 
-        $procedure = $returnValue = null;
+        $variable = $key = null;
 
         while ($token = $this->next()) {
             switch ($token[self::TYPE]) {
-                case UT_FUNCTION_CALL:
-                case UT_METHOD_CALL:
-                    $procedure = $token[self::VALUE];
+                case UT_VARIABLE:
+                    $variable = $token[self::VALUE];
                     break;
 
                 case UT_QUOTED_STRING:
                 case UT_INTEGER:
                 case UT_FLOAT:
-                    $returnValue = $token[self::VALUE];
+                    $key = $token[self::VALUE];
                     break;
             }
         }
 
-        if ($procedure && null !== $returnValue) {
-            $procedure = preg_replace('/\([^\)]*\)/', '', $procedure);
-            return [
-                RedefineProcedure::named($procedure)->toExecute($this->getNewFunctionBody($returnValue))
-            ];
-        }
-    }
+        if ($iterations = $this->getIterations()) {
+            $ret = [];
+            foreach ($iterations as $iteration) {
+                $ret[] = new AssertArrayHasKey(
+                    $variable,
+                    $key,
+                    $this->context->getLine(),
+                    $this->context->getFile(),
+                    $iteration
+                );
+            }
 
-    private function getNewFunctionBody($returnValue)
-    {
-        return <<<_BODY_
-function () {
-    return $returnValue;
-}
-_BODY_;
+            return $ret;
+        }
+
+        return [
+            new AssertArrayHasKey($variable, $key, $this->context->getLine(), $this->context->getFile(), 0)
+        ];
     }
 }

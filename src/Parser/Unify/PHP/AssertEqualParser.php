@@ -19,7 +19,6 @@ namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\PHP\Core\AssertEqual;
-use JDWil\Unify\Parser\Unify\PHP\PHPContext;
 
 /**
  * Class AssertEqualParser

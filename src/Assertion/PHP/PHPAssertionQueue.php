@@ -37,9 +37,9 @@ class PHPAssertionQueue extends AbstractAssertionQueue
         $assertions = $this->assertions;
 
         foreach ($assertions as $assertion) {
-            if ($assertion->getLine() === $line &&
-                ($assertion->getIteration() === $iteration ||
-                 $assertion->getIteration() === 0
+            if ($assertion->getLine()->inRange($line) &&
+                (   (int) $assertion->getIteration() === (int) $iteration ||
+                    (int) $assertion->getIteration() === 0
                 )
             ) {
                 if ($cloneIfRun && null !== $assertion->isPass()) {

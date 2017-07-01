@@ -17,10 +17,12 @@
 
 namespace JDWil\Unify\Parser\Unify\PHP;
 
+use JDWil\Unify\ValueObject\LineRange;
+
 class PHPContext
 {
     /**
-     * @var int
+     * @var LineRange
      */
     private $line;
 
@@ -59,7 +61,7 @@ class PHPContext
     }
 
     /**
-     * @return int
+     * @return LineRange
      */
     public function getLine()
     {
@@ -67,9 +69,9 @@ class PHPContext
     }
 
     /**
-     * @param int $line
+     * @param LineRange $line
      */
-    public function setLine($line)
+    public function setLine(LineRange $line)
     {
         $this->line = $line;
     }

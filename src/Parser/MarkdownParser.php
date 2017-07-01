@@ -13,20 +13,45 @@ namespace JDWil\Unify\Parser;
 
 use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
+use JDWil\Unify\TestRunner\TestPlanInterface;
 use Phlexy\Lexer\Stateful;
 
+/**
+ * Class MarkdownParser
+ */
 class MarkdownParser
 {
+    /**
+     * @var string
+     */
     private $file;
 
+    /**
+     * @var Stateful
+     */
     private $lexer;
 
+    /**
+     * @var ParserFactory
+     */
     private $parserFactory;
 
+    /**
+     * @var TestPlanInterface[]
+     */
     private $testPlans;
 
+    /**
+     * @var string
+     */
     private $autoloadPath;
 
+    /**
+     * MarkdownParser constructor.
+     * @param Stateful $lexer
+     * @param ParserFactory $parserFactory
+     * @param string $autoloadPath
+     */
     public function __construct(Stateful $lexer, ParserFactory $parserFactory, $autoloadPath)
     {
         $this->lexer = $lexer;
@@ -35,6 +60,9 @@ class MarkdownParser
         $this->testPlans = [];
     }
 
+    /**
+     * @param string $file
+     */
     public function parse($file)
     {
         $this->file = $file;
@@ -70,11 +98,18 @@ class MarkdownParser
 
     }
 
+    /**
+     * @return TestPlanInterface[]
+     */
     public function getTestPlans()
     {
         return $this->testPlans;
     }
 
+    /**
+     * @param string $codeBlock
+     * @throws \Exception
+     */
     private function createPhpTestPlan($codeBlock)
     {
         $codeBlock = preg_replace('/<\?php/', sprintf('<?php require_once "%s";', $this->autoloadPath), $codeBlock, 1);
@@ -89,6 +124,9 @@ class MarkdownParser
         );
     }
 
+    /**
+     * @param string $codeBlock
+     */
     private function createShellTestPlan($codeBlock)
     {
         $parser = $this->parserFactory->createShellParser($this->file);
@@ -100,6 +138,10 @@ class MarkdownParser
         );
     }
 
+    /**
+     * @param string $code
+     * @return string
+     */
     private function fixCodeBlock($code)
     {
         $code = sprintf("%s\nexit(0);", $code);

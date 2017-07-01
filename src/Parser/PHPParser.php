@@ -18,6 +18,7 @@ use JDWil\Unify\Assertion\PHP\PHPAssertionPipeline;
 use JDWil\Unify\Parser\Unify\PHP\PHPUnifyParserPipeline;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
+use JDWil\Unify\ValueObject\LineRange;
 
 /**
  * Class PHPParser
@@ -124,11 +125,12 @@ class PHPParser
                 } else {
                     $breakableLine = $token[2];
                 }
+                $breakableLine = $this->toLineRange($breakableLine);
 
                 $this->context->setLine($breakableLine);
                 $comment = $this->normalizeComment($token);
                 $parser = $this->factory->createUnifyParser();
-                // @todo stopped here. Need to parse "test double" code in addition to assertions.
+
                 if ($assertionTokenGroups = $parser->parse($comment)) {
                     foreach ($assertionTokenGroups as $assertionTokenGroup) {
                         $this->assertionPipeline->setContext($this->context);
@@ -183,6 +185,31 @@ class PHPParser
     public function getCommands()
     {
         return $this->commands;
+    }
+
+    /**
+     * @param $line
+     * @return LineRange
+     */
+    protected function toLineRange($line)
+    {
+        $start = $this->index;
+        $this->seekLine($line);
+        $end = $line;
+
+        while ($token = $this->next()) {
+            if (!is_array($token) && $token === ';') {
+                break;
+            }
+
+            if (is_array($token)) {
+                $end = $token[2];
+            }
+        }
+
+        $this->index = $start;
+
+        return new LineRange($line, $end);
     }
 
     /**
@@ -276,7 +303,7 @@ class PHPParser
     {
         foreach ($this->tokens as $index => $token) {
             if (is_array($token) && $token[2] >= $line) {
-                $this->index = $line;
+                $this->index = $index;
                 return;
             }
         }

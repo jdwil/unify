@@ -71,6 +71,7 @@ services:
                 - "@php_assert_equal"
                 - "@php_assert_file_exists"
                 - "@php_assert_file_not_exists"
+                - "@php_assert_array_has_key"
                 - "@php_redefine_procedure"
 
     php_assert_equal:
@@ -81,6 +82,9 @@ services:
 
     php_assert_file_not_exists:
         class: JDWil\Unify\Parser\Unify\PHP\AssertFileNotExistsParser
+
+    php_assert_array_has_key:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertArrayHasKeyParser
 
     php_redefine_procedure:
         class: JDWil\Unify\Parser\Unify\PHP\RedefineProcedureParser

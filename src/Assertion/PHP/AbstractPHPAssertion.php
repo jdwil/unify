@@ -17,6 +17,7 @@
 
 namespace JDWil\Unify\Assertion\PHP;
 use JDWil\Unify\Parser\Unify\PHP\PHPContext;
+use JDWil\Unify\ValueObject\LineRange;
 
 /**
  * Class AbstractPHPAssertion
@@ -24,7 +25,7 @@ use JDWil\Unify\Parser\Unify\PHP\PHPContext;
 abstract class AbstractPHPAssertion implements PHPAssertionInterface
 {
     /**
-     * @var int
+     * @var LineRange
      */
     protected $line;
 
@@ -55,11 +56,11 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
 
     /**
      * AbstractAssertion constructor.
-     * @param int $line
+     * @param LineRange $line
      * @param string $file
      * @param int $iteration
      */
-    public function __construct($line, $file, $iteration)
+    public function __construct(LineRange $line, $file, $iteration)
     {
         $this->line = $line;
         $this->file = $file;
@@ -68,7 +69,7 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
     }
 
     /**
-     * @return int
+     * @return LineRange
      */
     public function getLine()
     {

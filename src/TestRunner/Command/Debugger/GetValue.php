@@ -17,7 +17,10 @@
 
 declare(strict_types=1);
 
-namespace JDWil\Unify\TestRunner\Command;
+namespace JDWil\Unify\TestRunner\Command\Debugger;
+
+use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\TestRunner\Command\ResponseInterface;
 
 /**
  * Class GetValue

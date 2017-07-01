@@ -15,17 +15,64 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Instruction\PHP;
-
-use JDWil\Unify\TestRunner\Command\CommandInterface;
+namespace JDWil\Unify\ValueObject;
 
 /**
- * Interface PHPInstructionInterface
+ * Class LineRange
  */
-interface PHPInstructionInterface
+class LineRange
 {
     /**
-     * @return CommandInterface[]
+     * @var int
      */
-    public function getDebuggerCommands();
+    private $start;
+
+    /**
+     * @var int
+     */
+    private $end;
+
+    /**
+     * LineRange constructor.
+     * @param int $start
+     * @param int $end
+     */
+    public function __construct($start, $end)
+    {
+        $this->start = $start;
+        $this->end = $end;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStart()
+    {
+        return $this->start;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEnd()
+    {
+        return $this->end;
+    }
+
+    /**
+     * @param $line
+     * @return bool
+     */
+    public function inRange($line)
+    {
+        return ($line >= $this->start) && ($line <= $this->end);
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('%d-%d', $this->start, $this->end);
+    }
 }

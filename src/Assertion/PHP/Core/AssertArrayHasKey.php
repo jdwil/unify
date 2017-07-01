@@ -18,45 +18,43 @@
 namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
+use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\DbgResponse;
-use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
+use JDWil\Unify\TestRunner\Command\Debugger\ArrayKey;
+use JDWil\Unify\TestRunner\Command\Debugger\GetValue;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
 use JDWil\Unify\ValueObject\LineRange;
 
 /**
- * Class AssertFileNotExists
+ * Class AssertArrayHasKey
  */
-class AssertFileNotExists extends AbstractPHPAssertion
+class AssertArrayHasKey extends AbstractPHPAssertion
 {
     /**
-     * @var array
+     * @var string
      */
-    private $filePath;
+    private $arrayVariable;
 
     /**
-     * AssertFileNotExists constructor.
-     * @param string $filePath
+     * @var string
+     */
+    private $key;
+
+    /**
+     * AssertArrayHasKey constructor.
+     * @param int $arrayVariable
+     * @param string $key
      * @param LineRange $line
-     * @param int $iteration
      * @param string $file
+     * @param int $iteration
      */
-    public function __construct($filePath, LineRange $line, $iteration, $file)
+    public function __construct($arrayVariable, $key, LineRange $line, $file, $iteration)
     {
-        $this->filePath = $filePath;
-        parent::__construct($line, $file, $iteration);
-    }
+        $this->arrayVariable = $arrayVariable;
+        $this->key = $key;
 
-    /**
-     * The returned command must contain "-i %d"
-     *
-     * @return array
-     */
-    public function getDebuggerCommands()
-    {
-        return [
-            FileExists::atPath($this->filePath)
-        ];
+        parent::__construct($line, $file, $iteration);
     }
 
     /**
@@ -66,9 +64,9 @@ class AssertFileNotExists extends AbstractPHPAssertion
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
         if ($response instanceof XdebugResponse) {
-            $this->result = ! (bool) $response->getEvalResponse();
+            $this->result = (bool) $response->getEvalResponse() == '1';
         } else if ($response instanceof DbgResponse) {
-            $this->result = ! (bool) $response->getResponse();
+            $this->result = (bool) $response->getResponse();
         }
     }
 
@@ -77,6 +75,21 @@ class AssertFileNotExists extends AbstractPHPAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert "%s" does not exist.', $this->filePath);
+        return sprintf('Assert %s contains %s', $this->arrayVariable, (string) $this->key);
+    }
+
+    /**
+     * @return CommandInterface[]
+     */
+    public function getDebuggerCommands()
+    {
+        $variable = strpos($this->arrayVariable, '[') !== false ?
+            $this->arrayVariable :
+            sprintf('%s[%s]', $this->arrayVariable, (string) $this->key)
+        ;
+
+        return [
+            ArrayKey::exists($variable)
+        ];
     }
 }

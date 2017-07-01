@@ -19,9 +19,10 @@ namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\DbgResponse;
-use JDWil\Unify\TestRunner\Command\FileExists;
+use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
+use JDWil\Unify\ValueObject\LineRange;
 
 /**
  * Class AssertFileExists
@@ -36,11 +37,11 @@ class AssertFileExists extends AbstractPHPAssertion
     /**
      * AssertFileExists constructor.
      * @param string $filePath
-     * @param int $line
+     * @param LineRange $line
      * @param int $iteration
      * @param string $file
      */
-    public function __construct($filePath, $line, $iteration, $file)
+    public function __construct($filePath, LineRange $line, $iteration, $file)
     {
         $this->filePath = $filePath;
 
