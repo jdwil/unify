@@ -18,55 +18,27 @@
 namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\PHP\Core\AssertFileNotExists;
-use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\ValueObject\PHPContext;
 
 /**
  * Class AssertFileNotExistsParser
  */
-class AssertFileNotExistsParser extends AbstractPHPParser
+class AssertFileNotExistsParser extends AssertFileExistsParser
 {
     /**
-     * @var array
+     * @return array
      */
-    private $files;
-
-    /**
-     * @param $comment
-     * @param PHPContext $context
-     */
-    public function initialize($comment, PHPContext $context)
+    protected function getValidTokens()
     {
-        parent::initialize($comment, $context);
-
-        $this->files = [];
+        return [UT_FILE_NOT_EXISTS];
     }
 
     /**
-     * @return AssertionInterface[]|false
+     * @param string $file
+     * @param int $iteration
+     * @return AssertFileNotExists
      */
-    public function parse()
+    protected function newAssertion($file, $iteration = 0)
     {
-        if (!$this->containsToken([UT_FILE_NOT_EXISTS])) {
-            return false;
-        }
-
-        while ($token = $this->next()) {
-            switch ($token[self::TYPE]) {
-                case UT_FILE_PATH:
-                    $this->files[] = $token[self::VALUE];
-                    break;
-            }
-        }
-
-        $assertions = [];
-        foreach ($this->files as $index => $file) {
-            $assertions[] = new AssertFileNotExists(
-                $file,
-                count($this->files) > 1 ? $index + 1 : 0
-            );
-        }
-
-        return $assertions;
+        return new AssertFileNotExists($file, $iteration);
     }
 }

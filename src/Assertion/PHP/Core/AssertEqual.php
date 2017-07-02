@@ -17,68 +17,22 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
-use JDWil\Unify\TestRunner\Command\DbgResponse;
-use JDWil\Unify\TestRunner\Command\Debugger\GetValue;
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
-use JDWil\Unify\TestRunner\Command\XdebugResponse;
+use JDWil\Unify\TestRunner\Command\Debugger\Variable;
 
 /**
  * Class AssertEqual
  */
-class AssertEqual extends AbstractPHPAssertion
+class AssertEqual extends AbstractComparisonAssertion
 {
-    /**
-     * @var string
-     */
-    private $variable;
-
-    /**
-     * @var mixed
-     */
-    private $value;
-
-    /**
-     * @var mixed
-     */
-    private $internalValue;
-
-    /**
-     * AssertEqual constructor.
-     * @param string $variable
-     * @param mixed $value
-     * @param int $iteration
-     */
-    public function __construct($variable, $value, $iteration)
-    {
-        $this->variable = $variable;
-        $this->value = $value;
-
-        parent::__construct($iteration);
-    }
-
     /**
      * @return CommandInterface[]
      */
     public function getDebuggerCommands()
     {
         return [
-            GetValue::of($this->variable)
+            Variable::named($this->variable)->equals($this->value)
         ];
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
-     */
-    public function assert(ResponseInterface $response, $responseNumber = 1)
-    {
-        if ($response instanceof XdebugResponse) {
-            $this->result = $response->getValueOf($this->variable) === $this->value;
-        } else if ($response instanceof DbgResponse) {
-            $this->result = $response->getResponse() === $this->value;
-        }
     }
 
     /**
@@ -87,13 +41,5 @@ class AssertEqual extends AbstractPHPAssertion
     public function __toString()
     {
         return sprintf('Assert %s equals %s.', $this->variable, (string) $this->value);
-    }
-
-    /**
-     * @return bool
-     */
-    private function valueNeedsEvaluation()
-    {
-        return strpos($this->value, '::') !== false;
     }
 }

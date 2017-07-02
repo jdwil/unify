@@ -5,10 +5,15 @@
 ## Table of Contents
 
 1. [Arrays](#arrays)
-  * [Array Has Key](#array-has-key)
-2. [Classes](#classes)
-  * [Class Has Property](#class-has-property)
-  * [Class Doesn't Have Property](#class-lacks-property)
+    1. [Array Has Key](#array-has-key)
+1. [Classes](#classes)
+    1. [Class Has Property](#class-has-property)
+    1. [Class Doesn't Have Property](#class-lacks-property)
+1. [Equality](#equality)
+    1. [Variables](#variable-equality)
+1. [File System](#filesystem)
+    1. [File Exists](#file-exists)
+    1. [File Doesn't Exist](#file-not-exists)
   
 <a name="arrays" />
 
@@ -103,4 +108,133 @@ class Foo
 {
     public $zip;
 }
+```
+
+<a name="equality" />
+
+## Equality
+
+<a name="variable-equality" />
+
+#### Variables
+
+Examples of asserting equality:
+
+```php
+<?php
+
+/*
+ * $x is 1.
+ * $x = 1.
+ * $x == 1.
+ * $x == '1' ($x === '1' would fail).
+ * $x === 1.
+ * $x is equal to 1.
+ * $x equals 1.
+ */
+$x = 1;
+
+$z = 'foo'; // $z is 'foo'
+
+for ($i = 0; $i <= 3; $i++) {
+    /*
+     * $y equals 0, 1, 2, 3.
+     * $y equals 0 on iteration 1.
+     * $y is 1 on iteration 2.
+     * $y = 2 on iteration 3.
+     * $y == 3 on iteration 4.
+     */
+    $y = $i; 
+}
+```
+
+Examples of asserting inequality (not equals):
+
+```php
+<?php
+
+/*
+ * $x is not 2.
+ * $x does not equal 2.
+ * $x doesn't equal 2.
+ * $x != 2.
+ * $x !== 2.
+ * $x !== '1'
+ */
+$x = 1;
+
+for ($i = 0; $i <= 3; $i++) {
+    /*
+     * $y does not equal 1, 2, 3, 4.
+     * $y doesn't equal 1 on iteration 1.
+     * $y is not 2 on iteration 2.
+     * $y != 3 on iteration 3.
+     * $y !== 4 on iteration 4.
+     */
+    $y = $i;
+}
+```
+
+Examples of asserting less / greater than:
+
+```php
+<?php
+
+/*
+ * $x is less than 2.
+ * $x is less than or equal to 1.
+ * $x < 2.
+ * $x <= 1.
+ */
+$x = 1;
+
+/*
+ * $y is greater than 1.
+ * $y is greater than or equal to 2.
+ * $y > 1.
+ * $y >= 2.
+ */
+$y = 2;
+```
+
+<a name="filesystem" />
+
+## File System
+
+<a name="file-exists" />
+
+#### File Exists
+
+```php
+<?php
+
+use Symfony\Component\Filesystem\Filesystem;
+
+$filesystem = new Filesystem();
+/*
+ * Create /tmp/test.txt;
+ * Creates '/tmp/test.txt'.
+ * Create file /tmp/test.txt . (Beware a dot line-ending when using a file path. Notice the space.)
+ */
+$filesystem->touch('/tmp/test.txt');
+$filesystem->remove('/tmp/test.txt');
+```
+
+<a name="file-not-exists" />
+
+#### File Doesn't Exists
+
+```php
+<?php
+
+use Symfony\Component\Filesystem\Filesystem;
+
+$filesystem = new Filesystem();
+$filesystem->touch('/tmp/test.txt');
+/*
+ * Delete /tmp/test.txt;
+ * Deletes '/tmp/test.txt'.
+ * Delete file /tmp/test.txt . (Beware a dot line-ending when using a file path. Notice the space.)
+ */
+$filesystem->remove('/tmp/test.txt');
 ```

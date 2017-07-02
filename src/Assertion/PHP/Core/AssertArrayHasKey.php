@@ -19,11 +19,7 @@ namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
-use JDWil\Unify\TestRunner\Command\DbgResponse;
 use JDWil\Unify\TestRunner\Command\Debugger\ArrayKey;
-use JDWil\Unify\TestRunner\Command\ResponseInterface;
-use JDWil\Unify\TestRunner\Command\XdebugResponse;
-use JDWil\Unify\ValueObject\CodeLocation;
 
 /**
  * Class AssertArrayHasKey
@@ -52,19 +48,6 @@ class AssertArrayHasKey extends AbstractPHPAssertion
         $this->key = $key;
 
         parent::__construct($iteration);
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @param int $responseNumber
-     */
-    public function assert(ResponseInterface $response, $responseNumber = 1)
-    {
-        if ($response instanceof XdebugResponse) {
-            $this->result = (string) $response->getEvalResponse() === '1';
-        } else if ($response instanceof DbgResponse) {
-            $this->result = (bool) $response->getResponse();
-        }
     }
 
     /**

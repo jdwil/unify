@@ -19,10 +19,8 @@ namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
-use JDWil\Unify\TestRunner\Command\DbgResponse;
 use JDWil\Unify\TestRunner\Command\Debugger\PropertyExists;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
-use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
 /**
  * Class AssertPropertyNotExists
@@ -59,11 +57,8 @@ class AssertPropertyNotExists extends AbstractPHPAssertion
      */
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
-        if ($response instanceof XdebugResponse) {
-            $this->result = !((bool) $response->getEvalResponse());
-        } else if ($response instanceof DbgResponse) {
-            $this->result = !((bool) $response->getResponse());
-        }
+        parent::assert($response, $responseNumber);
+        $this->result = !$this->result;
     }
 
     /**

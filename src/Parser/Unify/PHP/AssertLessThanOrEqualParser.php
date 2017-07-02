@@ -15,48 +15,33 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
-use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
+namespace JDWil\Unify\Parser\Unify\PHP;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\PHP\Core\AssertLessThanOrEqual;
 
 /**
- * Class AssertFileExists
+ * Class AssertLessThanOrEqualParser
  */
-class AssertFileExists extends AbstractPHPAssertion
+class AssertLessThanOrEqualParser extends AbstractComparisonParser
 {
-    /**
-     * @var string
-     */
-    private $filePath;
-
-    /**
-     * AssertFileExists constructor.
-     * @param string $filePath
-     * @param int $iteration
-     */
-    public function __construct($filePath, $iteration)
-    {
-        $this->filePath = $filePath;
-
-        parent::__construct($iteration);
-    }
-
     /**
      * @return array
      */
-    public function getDebuggerCommands()
+    protected function getValidTokens()
     {
-        return [
-            FileExists::atPath($this->filePath)
-        ];
+        return [UT_LESS_THAN_OR_EQUAL];
     }
 
     /**
-     * @return string
+     * @param string $variable
+     * @param string $value
+     * @param int $iteration
+     * @return AssertionInterface
      */
-    public function __toString()
+    protected function newAssertion($variable, $value, $iteration = 0)
     {
-        return sprintf('Assert "%s" exists.', $this->filePath);
+        return new AssertLessThanOrEqual($variable, $value, $iteration);
     }
 }

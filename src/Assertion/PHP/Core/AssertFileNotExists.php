@@ -18,11 +18,8 @@
 namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
-use JDWil\Unify\TestRunner\Command\DbgResponse;
 use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
-use JDWil\Unify\TestRunner\Command\XdebugResponse;
-use JDWil\Unify\ValueObject\LineRange;
 
 /**
  * Class AssertFileNotExists
@@ -47,8 +44,6 @@ class AssertFileNotExists extends AbstractPHPAssertion
     }
 
     /**
-     * The returned command must contain "-i %d"
-     *
      * @return array
      */
     public function getDebuggerCommands()
@@ -64,11 +59,8 @@ class AssertFileNotExists extends AbstractPHPAssertion
      */
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
-        if ($response instanceof XdebugResponse) {
-            $this->result = ! (bool) $response->getEvalResponse();
-        } else if ($response instanceof DbgResponse) {
-            $this->result = ! (bool) $response->getResponse();
-        }
+        parent::assert($response, $responseNumber);
+        $this->result = !$this->result;
     }
 
     /**

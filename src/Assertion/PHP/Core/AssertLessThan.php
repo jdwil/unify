@@ -17,29 +17,19 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
-use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
+use JDWil\Unify\TestRunner\Command\Debugger\Variable;
 
 /**
- * Class AssertFileExists
+ * Class AssertLessThan
  */
-class AssertFileExists extends AbstractPHPAssertion
+class AssertLessThan extends AbstractComparisonAssertion
 {
     /**
-     * @var string
+     * @return string
      */
-    private $filePath;
-
-    /**
-     * AssertFileExists constructor.
-     * @param string $filePath
-     * @param int $iteration
-     */
-    public function __construct($filePath, $iteration)
+    public function __toString()
     {
-        $this->filePath = $filePath;
-
-        parent::__construct($iteration);
+        return sprintf('Assert %s is less than %s', $this->variable, (string) $this->value);
     }
 
     /**
@@ -48,15 +38,7 @@ class AssertFileExists extends AbstractPHPAssertion
     public function getDebuggerCommands()
     {
         return [
-            FileExists::atPath($this->filePath)
+            Variable::named($this->variable)->isLessThan($this->value)
         ];
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return sprintf('Assert "%s" exists.', $this->filePath);
     }
 }

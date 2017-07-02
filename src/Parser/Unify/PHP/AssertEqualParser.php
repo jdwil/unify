@@ -19,90 +19,33 @@ namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
 use JDWil\Unify\Assertion\PHP\Core\AssertEqual;
-use JDWil\Unify\ValueObject\PHPContext;
+use JDWil\Unify\Assertion\PHP\Core\AssertStrictEqual;
 
 /**
  * Class AssertEqualParser
  */
-class AssertEqualParser extends AbstractPHPParser
+class AssertEqualParser extends AbstractComparisonParser
 {
-    const TYPE_STRING = 'string';
-    const TYPE_INTEGER = 'integer';
-    const TYPE_FLOAT = 'float';
-
     /**
-     * @var string
+     * @return array
      */
-    protected $variable;
-
-    /**
-     * @var array
-     */
-    protected $valueTypes;
-
-    /**
-     * @var array
-     */
-    protected $values;
-
-    /**
-     * @param $comment
-     * @param PHPContext $context
-     */
-    public function initialize($comment, PHPContext $context)
+    protected function getValidTokens()
     {
-        parent::initialize($comment, $context);
-
-        $this->values = [];
-        $this->valueTypes = [];
-        $this->variable = null;
+        return [UT_EQUALS, UT_EQUALS_MATCH_TYPE];
     }
 
     /**
-     * @return AssertionInterface[]|false
+     * @param string $variable
+     * @param string $value
+     * @param int $iteration
+     * @return AssertionInterface
      */
-    public function parse()
+    protected function newAssertion($variable, $value, $iteration = 0)
     {
-        if (!$this->containsToken([UT_EQUALS, UT_EQUALS_MATCH_TYPE])) {
-            return false;
+        if ($this->containsToken([UT_EQUALS_MATCH_TYPE])) {
+            return new AssertStrictEqual($variable, $value, $iteration);
         }
 
-        $assertions = [];
-
-        while ($token = $this->next()) {
-            // @todo add arrays, plus more I'm sure.
-            switch ($token[self::TYPE]) {
-                case UT_VARIABLE:
-                    $this->variable = $token[self::VALUE];
-                    break;
-
-                case UT_QUOTED_STRING:
-                    $this->valueTypes[] = self::TYPE_STRING;
-                    $this->values[] = $token[self::VALUE];
-                    break;
-
-                case UT_FLOAT:
-                    $this->valueTypes[] = self::TYPE_FLOAT;
-                    $this->values[] = $token[self::VALUE];
-                    break;
-
-                case UT_INTEGER:
-                    $this->valueTypes[] = self::TYPE_INTEGER;
-                    $this->values[] = $token[self::VALUE];
-                    break;
-            }
-        }
-
-        if (count($this->values)) {
-            for ($num = count($this->values), $i = 1; $i <= $num; $i++) {
-                $assertions[] = new AssertEqual(
-                    $this->variable,
-                    $this->values[$i - 1],
-                    $num > 1 ? $i : 0
-                );
-            }
-        }
-
-        return $assertions;
+        return new AssertEqual($variable, $value, $iteration);
     }
 }

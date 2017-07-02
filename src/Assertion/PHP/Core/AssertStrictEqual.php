@@ -17,46 +17,29 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
-use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
+use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\TestRunner\Command\Debugger\Variable;
 
 /**
- * Class AssertFileExists
+ * Class AssertStrictEqual
  */
-class AssertFileExists extends AbstractPHPAssertion
+class AssertStrictEqual extends AbstractComparisonAssertion
 {
-    /**
-     * @var string
-     */
-    private $filePath;
-
-    /**
-     * AssertFileExists constructor.
-     * @param string $filePath
-     * @param int $iteration
-     */
-    public function __construct($filePath, $iteration)
-    {
-        $this->filePath = $filePath;
-
-        parent::__construct($iteration);
-    }
-
-    /**
-     * @return array
-     */
-    public function getDebuggerCommands()
-    {
-        return [
-            FileExists::atPath($this->filePath)
-        ];
-    }
-
     /**
      * @return string
      */
     public function __toString()
     {
-        return sprintf('Assert "%s" exists.', $this->filePath);
+        return sprintf('Assert %s strictly matches %s', $this->variable, (string) $this->value);
+    }
+
+    /**
+     * @return CommandInterface[]
+     */
+    public function getDebuggerCommands()
+    {
+        return [
+            Variable::named($this->variable)->strictlyEquals($this->value)
+        ];
     }
 }

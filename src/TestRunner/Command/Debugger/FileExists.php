@@ -51,7 +51,7 @@ class FileExists extends AbstractCommand
         return sprintf(
             "eval -i %%d -- %s\0",
             base64_encode(
-                sprintf('file_exists(\'%s\');', $this->path)
+                sprintf('file_exists(%s);', $this->path)
             )
         );
     }

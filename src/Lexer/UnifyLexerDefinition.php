@@ -42,6 +42,8 @@ define('UT_ITERATION', 125);
 define('UT_OBJECT_HAS_PROPERTY', 126);
 define('UT_OBJECT_NOT_HAS_PROPERTY', 127);
 define('UT_PROPERTY_REFERENCE', 128);
+define('UT_NOT_EQUALS', 129);
+define('UT_NOT_EQUALS_MATCH_TYPE', 130);
 
 /**
  * Class UnifyLexerDefinition
@@ -103,6 +105,11 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::WHITESPACE => UT_WHITESPACE,
                 self::COMMENT => UT_COMMENT,
 
+                self::METHOD_CALL => function (Stateful $lexer) {
+                    $lexer->swapState('METHOD_CALL');
+
+                    return UT_METHOD_CALL;
+                },
                 self::PROPERTY_REFERENCE => function (Stateful $lexer) {
                     $lexer->swapState('PROPERTY_REFERENCE');
 
@@ -117,11 +124,6 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                     $lexer->swapState('FUNCTION_CALL');
 
                     return UT_FUNCTION_CALL;
-                },
-                self::METHOD_CALL => function (Stateful $lexer) {
-                    $lexer->swapState('METHOD_CALL');
-
-                    return UT_METHOD_CALL;
                 },
 
                 'creates?( files?)?' => function (Stateful $lexer) {
@@ -158,19 +160,27 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 'has property' => UT_OBJECT_HAS_PROPERTY,
                 'doesn?\'?t?( not)? have property' => UT_OBJECT_NOT_HAS_PROPERTY,
 
+                // Inequality
+                '\!==' => UT_NOT_EQUALS_MATCH_TYPE,
+                '\!=' => UT_NOT_EQUALS,
+                'is not' => UT_NOT_EQUALS,
+                'doesn?\'?t?( not)? equal' => UT_NOT_EQUALS,
+                'no longer equals' => UT_NOT_EQUALS,
+
                 // Equality
                 '===' => UT_EQUALS_MATCH_TYPE,
                 '==?' => UT_EQUALS,
                 '>' => UT_GREATER_THAN,
+                'is greater than or equal to' => UT_GREATER_THAN_OR_EQUAL,
                 'is greater than' => UT_GREATER_THAN,
                 '>=' => UT_GREATER_THAN_OR_EQUAL,
-                'is greater than or equal to' => UT_GREATER_THAN_OR_EQUAL,
                 '<' => UT_LESS_THAN,
+                'is less than or equal to' => UT_LESS_THAN_OR_EQUAL,
                 'is less than' => UT_LESS_THAN,
                 '<=' => UT_LESS_THAN_OR_EQUAL,
-                'is less than or equal to' => UT_LESS_THAN_OR_EQUAL,
                 'is equal to' => UT_EQUALS,
                 'is' => UT_EQUALS,
+                'now equals' => UT_EQUALS,
                 'equals' => UT_EQUALS,
 
                 // Misc

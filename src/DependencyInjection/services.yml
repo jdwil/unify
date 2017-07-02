@@ -70,6 +70,11 @@ services:
             -
                 - "@php_assert_array_has_key"
                 - "@php_assert_equal"
+                - "@php_assert_not_equal"
+                - "@php_assert_less_than"
+                - "@php_assert_less_than_or_equal"
+                - "@php_assert_greater_than"
+                - "@php_assert_greater_than_or_equal"
                 - "@php_assert_file_exists"
                 - "@php_assert_file_not_exists"
                 - "@php_assert_property_exists"
@@ -81,6 +86,21 @@ services:
 
     php_assert_equal:
         class: JDWil\Unify\Parser\Unify\PHP\AssertEqualParser
+
+    php_assert_not_equal:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertNotEqualParser
+
+    php_assert_less_than:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertLessThanParser
+
+    php_assert_less_than_or_equal:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertLessThanOrEqualParser
+
+    php_assert_greater_than:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertGreaterThanParser
+
+    php_assert_greater_than_or_equal:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertGreaterThanOrEqualParser
 
     php_assert_file_exists:
         class: JDWil\Unify\Parser\Unify\PHP\AssertFileExistsParser

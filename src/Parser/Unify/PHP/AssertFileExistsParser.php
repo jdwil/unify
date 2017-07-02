@@ -19,7 +19,6 @@ namespace JDWil\Unify\Parser\Unify\PHP;
 
 use JDWil\Unify\Assertion\PHP\Core\AssertFileExists;
 use JDWil\Unify\Assertion\AssertionInterface;
-use JDWil\Unify\ValueObject\PHPContext;
 
 /**
  * Class AssertFileExistsParser
@@ -27,46 +26,52 @@ use JDWil\Unify\ValueObject\PHPContext;
 class AssertFileExistsParser extends AbstractPHPParser
 {
     /**
-     * @var array
-     */
-    private $files;
-
-    /**
-     * @param $comment
-     * @param PHPContext $context
-     */
-    public function initialize($comment, PHPContext $context)
-    {
-        parent::initialize($comment, $context);
-
-        $this->files = [];
-    }
-
-    /**
      * @return AssertionInterface[]|false
      */
     public function parse()
     {
-        if (!$this->containsToken([UT_FILE_EXISTS])) {
+        if (!$this->containsToken($this->getValidTokens())) {
             return false;
         }
+
+        $files = [];
 
         while ($token = $this->next()) {
             switch ($token[self::TYPE]) {
                 case UT_FILE_PATH:
-                    $this->files[] = $token[self::VALUE];
+                    $files[] = $token[self::VALUE];
                     break;
             }
         }
 
         $assertions = [];
-        foreach ($this->files as $index => $file) {
-            $assertions[] = new AssertFileExists(
-                $file,
-                count($this->files) > 1 ? $index + 1 : 0
-            );
+        foreach ($files as $index => $file) {
+            if (!in_array($file[0], ['"', "'"], true)) {
+                $file = sprintf("'%s'", $file);
+            }
+
+            $assertions[] = $this->newAssertion($file, count($files) > 1 ? $index + 1 : 0);
         }
 
         return $assertions;
     }
+
+    /**
+     * @return array
+     */
+    protected function getValidTokens()
+    {
+        return [UT_FILE_EXISTS];
+    }
+
+    /**
+     * @param string $file
+     * @param int $iteration
+     * @return AssertFileExists
+     */
+    protected function newAssertion($file, $iteration = 0)
+    {
+        return new AssertFileExists($file, $iteration);
+    }
+
 }
