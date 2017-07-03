@@ -9,7 +9,7 @@ it's roots," so to say.
 
 1. [Quick Start (this document)](#overview)
 2. [Assertions](assertions.md)
-3. [Internals](internals/internals.md)
+3. [Internals](../internals/internals.md)
   
 <a name="overview"/>
 

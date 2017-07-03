@@ -116,12 +116,25 @@ class PHPParser
         }
 
         $this->index = 1;
+        $lastBreakableLine = $line = 0;
 
         while ($token = $this->next()) {
+
+            if (is_array($token) && $token[2] !== $line) {
+                $line = $token[2];
+                if ($this->lineIsBreakable($line)) {
+                    $lastBreakableLine = $line;
+                }
+            }
+
             if ($this->isComment($token)) {
                 $singleLineComment = $this->isSingleLineComment($token);
                 if ($singleLineComment) {
-                    $breakableLine = $this->getNextBreakableLine($token[2]);
+                    if ($this->nextLineIsBlank()) {
+                        $breakableLine = $lastBreakableLine;
+                    } else {
+                        $breakableLine = $this->getNextBreakableLine($token[2]);
+                    }
                 } else {
                     $breakableLine = $token[2];
                 }
@@ -264,6 +277,32 @@ class PHPParser
         }
 
         return true;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function nextLineIsBlank()
+    {
+        $token = $this->tokens[$this->index];
+
+        return $this->isWhitespace($token) && substr_count($token[1], "\n") > 1;
+    }
+
+    /**
+     * @param int $line
+     * @return bool
+     */
+    protected function lineIsBreakable($line)
+    {
+        $tokens = $this->getLineTokens($line);
+        foreach ($tokens as $token) {
+            if ($this->isBreakableToken($token)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

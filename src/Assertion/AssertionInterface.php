@@ -31,6 +31,11 @@ interface AssertionInterface
     public function isPass();
 
     /**
+     * @return string
+     */
+    public function getFailureMessage();
+
+    /**
      * @param ResponseInterface $response
      * @param int $responseNumber
      */

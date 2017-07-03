@@ -128,6 +128,11 @@ class XDebugSession extends AbstractSession
     private $lastResponse;
 
     /**
+     * @var array
+     */
+    private $processedFailures;
+
+    /**
      * DebugSession constructor.
      * @param string $host
      * @param int $port
@@ -144,12 +149,14 @@ class XDebugSession extends AbstractSession
         $this->debuggerStopped = false;
         $this->iterations = [];
         $this->processedAssertions = [];
+        $this->processedFailures = [];
 
         $this->setContext(self::INITIALIZE);
 
         $this->initializationCommands = [
             "feature_set -i %d -n show_hidden -v 1\0",
             "feature_set -i %d -n max_children -v 100\0",
+            "stdout -i %d -c 2\0",
             "step_into -i %d\0",
         ];
     }
@@ -175,14 +182,27 @@ class XDebugSession extends AbstractSession
 
         $this->socket->on('connection', function (ConnectionInterface $connection) {
             $connection->on('data', function ($data) use ($connection) {
-                list ($length, $xml) = explode("\0", $data);
-                $this->lastResponse = $xml;
-                if ($this->output->isDebug()) {
-                    $this->output->writeln($xml);
+                $responses = $this->parseResponse($data);
+
+                foreach ($responses as $xml) {
+                    if ($this->output->isDebug()) {
+                        $this->output->writeln($xml);
+                    }
+                    $document = new \DOMDocument();
+                    $document->loadXML($xml);
+
+                    if ($document->documentElement->localName === 'stream' &&
+                        $document->documentElement->getAttribute('type') === 'stdout'
+                    ) {
+                        $output = base64_decode($document->documentElement->nodeValue);
+                        $this->debugOutput('STDOUT:');
+                        $this->debugOutput($output);
+                        $this->testPlan->appendOutput($output);
+                    } else {
+                        $this->lastResponse = $xml;
+                        $this->debug($document->documentElement, $connection);
+                    }
                 }
-                $document = new \DOMDocument();
-                $document->loadXML($xml);
-                $this->debug($document->documentElement, $connection);
             });
         });
 
@@ -195,6 +215,23 @@ class XDebugSession extends AbstractSession
         $this->loop->run();
 
         return $this->assertions;
+    }
+
+    /**
+     * @param string $data
+     * @return array
+     */
+    private function parseResponse($data)
+    {
+        $ret = [];
+        $parts = explode("\0", $data);
+        foreach ($parts as $part) {
+            if (strpos($part, '<?xml') === 0) {
+                $ret[] = $part;
+            }
+        }
+
+        return $ret;
     }
 
     /**
@@ -336,8 +373,18 @@ class XDebugSession extends AbstractSession
          * for processing.
          */
         if ($this->currentAssertionNumber > 0) {
+            /** @var PHPAssertionInterface $assertion */
             $assertion = $this->assertionQueue->current();
-            $assertion->assert(new XdebugResponse($this->lastResponse), $this->currentAssertionNumber);
+
+            /**
+             * If the assertion has already been processed (non-null isPass()) then we're processing
+             * failure commands, and no longer asserting.
+             */
+            if (null !== $assertion->isPass()) {
+                $assertion->handleFailureCommandResponse(new XdebugResponse($this->lastResponse));
+            } else {
+                $assertion->assert(new XdebugResponse($this->lastResponse), $this->currentAssertionNumber);
+            }
         } else if ($saveLastRunningResponse) {
             $this->lastRunningResponse = $response;
         }
@@ -353,6 +400,20 @@ class XDebugSession extends AbstractSession
 
         if (!isset($assertion)) {
             throw new LogicException('$assertion is not set here. The command stack should not have been empty.');
+        }
+
+        /**
+         * If the assertion failed, see if there are any additional debugger commands
+         * we need to run for it to gather data.
+         */
+        if (false === $assertion->isPass() &&
+            false !== ($commands = $assertion->getFailureCommands()) &&
+            !in_array(spl_object_hash($assertion), $this->processedFailures, true)
+        ) {
+            $this->commandStack = $commands;
+            $this->processedFailures[] = spl_object_hash($assertion);
+            $this->send($connection, array_shift($this->commandStack));
+            return;
         }
 
         /**

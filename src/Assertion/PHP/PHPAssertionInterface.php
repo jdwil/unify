@@ -18,6 +18,7 @@
 namespace JDWil\Unify\Assertion\PHP;
 
 use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\ValueObject\PHPContext;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 
@@ -30,6 +31,16 @@ interface PHPAssertionInterface extends AssertionInterface
      * @return CommandInterface[]
      */
     public function getDebuggerCommands();
+
+    /**
+     * @return false|CommandInterface[]
+     */
+    public function getFailureCommands();
+
+    /**
+     * @param ResponseInterface $response
+     */
+    public function handleFailureCommandResponse(ResponseInterface $response);
 
     /**
      * @return int|null

@@ -136,6 +136,12 @@ $x = 1;
 
 $z = 'foo'; // $z is 'foo'
 
+/*
+ * $a is ['a', 'b'].
+ * $a equals array('a', 'b').
+ */
+$a = ['a', 'b'];
+
 for ($i = 0; $i <= 3; $i++) {
     /*
      * $y equals 0, 1, 2, 3.
@@ -163,6 +169,12 @@ Examples of asserting inequality (not equals):
  */
 $x = 1;
 
+/*
+ * $a is not ['a', 'c'].
+ * $a != ['a', 'c'].
+ */
+$a = ['a', 'b'];
+
 for ($i = 0; $i <= 3; $i++) {
     /*
      * $y does not equal 1, 2, 3, 4.
@@ -170,6 +182,7 @@ for ($i = 0; $i <= 3; $i++) {
      * $y is not 2 on iteration 2.
      * $y != 3 on iteration 3.
      * $y !== 4 on iteration 4.
+     * $y no longer equals 4 on iteration 4.
      */
     $y = $i;
 }

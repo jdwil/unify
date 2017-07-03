@@ -15,4 +15,4 @@ help you forget about all the time you slaved over unit tests before Unify.
 
 ## Documentation
 
-The full documentation can be found [here](docs/markdown/unify.md).
+The full documentation can be found [here](docs/markdown/user/unify.md).

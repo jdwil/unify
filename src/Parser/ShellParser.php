@@ -17,8 +17,8 @@
 
 namespace JDWil\Unify\Parser;
 
-use JDWil\Unify\Assertion\PHP\PHPAssertionQueue;
 use JDWil\Unify\Assertion\Shell\Core\AssertCommandOutputEquals;
+use JDWil\Unify\Assertion\Shell\ShellAssertionQueue;
 use Phlexy\Lexer\Stateful;
 
 class ShellParser
@@ -35,7 +35,7 @@ class ShellParser
     {
         $this->file = $file;
         $this->lexer = $lexer;
-        $this->assertions = new PHPAssertionQueue();
+        $this->assertions = new ShellAssertionQueue();
     }
 
     public function parse($code)

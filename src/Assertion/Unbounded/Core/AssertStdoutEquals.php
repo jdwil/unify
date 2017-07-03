@@ -15,15 +15,17 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\Shell\Core;
+declare(strict_types=1);
+
+namespace JDWil\Unify\Assertion\Unbounded\Core;
 
 use JDWil\Unify\Assertion\Shell\AbstractShellAssertion;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 
 /**
- * Class AssertCommandOutputEquals
+ * Class AssertStdoutEquals
  */
-class AssertCommandOutputEquals extends AbstractShellAssertion
+class AssertStdoutEquals extends AbstractShellAssertion
 {
     /**
      * @var string
@@ -36,16 +38,16 @@ class AssertCommandOutputEquals extends AbstractShellAssertion
     private $actualOutput;
 
     /**
-     * AssertCommandOutputEquals constructor.
+     * AssertStdoutEquals constructor.
      * @param string $expectedOutput
-     * @param string $file
+     * @param int $file
      * @param int $line
      */
     public function __construct($expectedOutput, $file, $line)
     {
-        parent::__construct($file, $line);
-
         $this->expectedOutput = $expectedOutput;
+
+        parent::__construct($file, $line);
     }
 
     /**
@@ -57,13 +59,22 @@ class AssertCommandOutputEquals extends AbstractShellAssertion
     }
 
     /**
+     * @return string
+     */
+    public function getFailureMessage()
+    {
+        return sprintf("Expected: %s \nActual: %s\n", $this->expectedOutput, $this->actualOutput);
+    }
+
+    /**
      * @param ResponseInterface $response
      * @param int $responseNumber
      */
     public function assert(ResponseInterface $response, $responseNumber = 1)
     {
         $this->actualOutput = $response->getResponse();
-        $this->result = trim($this->actualOutput) === trim($this->expectedOutput);
+
+        $this->result = $this->expectedOutput === $this->actualOutput;
     }
 
     /**
@@ -71,14 +82,6 @@ class AssertCommandOutputEquals extends AbstractShellAssertion
      */
     public function __toString()
     {
-        return sprintf('Assert command output equals %s',$this->expectedOutput);
-    }
-
-    /**
-     * @return string
-     */
-    public function getFailureMessage()
-    {
-        return sprintf("Expected: %s\nActual: %s\n", $this->expectedOutput, $this->actualOutput);
+        return sprintf('Assert STDOUT equals %s', $this->expectedOutput);
     }
 }

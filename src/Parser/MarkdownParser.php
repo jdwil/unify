@@ -11,9 +11,12 @@
 
 namespace JDWil\Unify\Parser;
 
+use JDWil\Unify\Assertion\Unbounded\Core\AssertStdoutEquals;
+use JDWil\Unify\Assertion\Unbounded\UnboundedAssertionQueue;
 use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
 use JDWil\Unify\TestRunner\TestPlanInterface;
+use JDWil\Unify\TestRunner\Unbounded\UnboundedTestPlan;
 use Phlexy\Lexer\Stateful;
 
 /**
@@ -93,6 +96,14 @@ class MarkdownParser
                         $this->createShellTestPlan($token[2]);
                     }
                     break;
+
+                case MD_STDOUT:
+                    if ($skipNextBlock) {
+                        $skipNextBlock = false;
+                    } else {
+                        $this->createUnboundedTestPlan($token[2]);
+                    }
+                    break;
             }
         }
 
@@ -136,6 +147,17 @@ class MarkdownParser
             $parser->getCommand(),
             $parser->getAssertions()
         );
+    }
+
+    /**
+     * @param string $codeBlock
+     */
+    private function createUnboundedTestPlan($codeBlock)
+    {
+        $queue = new UnboundedAssertionQueue();
+        $queue->add(new AssertStdoutEquals($codeBlock, $this->file, 0));
+
+        $this->testPlans[] = new UnboundedTestPlan($this->file, $codeBlock, $queue);
     }
 
     /**

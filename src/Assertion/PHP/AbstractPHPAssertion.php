@@ -106,6 +106,14 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
     }
 
     /**
+     * @return string
+     */
+    public function getFailureMessage()
+    {
+        return '';
+    }
+
+    /**
      * @param ResponseInterface $response
      * @param int $responseNumber
      */
@@ -116,6 +124,23 @@ abstract class AbstractPHPAssertion implements PHPAssertionInterface
         } else if ($response instanceof DbgResponse) {
             $this->result = (bool) $response->getResponse();
         }
+    }
+
+    /**
+     * @return false|PHPAssertionInterface[]
+     */
+    public function getFailureCommands()
+    {
+        return false;
+    }
+
+    /**
+     * @param ResponseInterface $response
+     * @throws \LogicException
+     */
+    public function handleFailureCommandResponse(ResponseInterface $response)
+    {
+        throw new \LogicException('handleFailureCommandResponse called, but class has not implemented this method.');
     }
 
     /**

@@ -44,6 +44,8 @@ define('UT_OBJECT_NOT_HAS_PROPERTY', 127);
 define('UT_PROPERTY_REFERENCE', 128);
 define('UT_NOT_EQUALS', 129);
 define('UT_NOT_EQUALS_MATCH_TYPE', 130);
+define('UT_ARRAY', 131);
+define('UT_CONSTANT', 132);
 
 /**
  * Class UnifyLexerDefinition
@@ -56,9 +58,12 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
     const DOUBLE_QUOTED_STRING = '"[^"\\\\${]*(?:(?:\\\\.|\$(?!\{|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)|\{(?!\$))[^"\\\\${]*)*"';
     const INTEGER = '[0-9]+';
     const FLOAT = '[0-9]*\.[0-9]+';
+    const TYPE_ARRAY = '(\[|array\().*(\]|\))';
+    const CONSTANT = '[a-zA-Z_]\w*\b';
     const QUOTED_FILE_PATH = '[\'"][^\'"]+[\'"]';
     const UNQUOTED_FILE_PATH = '\.?\.?\/[^\s,;]+';
-    const COMMENT = '\([^\)]*\)';
+    const INLINE_COMMENT = '\([^\)]*\)';
+    const COMMENT = '(.*)?[:;\.]';
     const FUNCTION_CALL = '[a-zA-Z_]\w*\([^\)]*\)';
     const METHOD_CALL = '\$?[a-zA-Z_]\w*(::)?(->)?[a-zA-Z_]\w*\([^\)]*\)';
     const PROPERTY_REFERENCE = '\$?[a-zA-Z_]\w*::[a-zA-Z_]\w*\b';
@@ -72,12 +77,13 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
     {
         $procedureCall = [
             self::WHITESPACE => UT_WHITESPACE,
-            self::COMMENT => UT_COMMENT,
+            self::INLINE_COMMENT => UT_COMMENT,
 
             self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
             self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
             self::FLOAT => UT_FLOAT,
             self::INTEGER => UT_INTEGER,
+            self::TYPE_ARRAY => UT_ARRAY,
 
             'will( always)? return' => UT_ALWAYS_RETURN,
 
@@ -103,7 +109,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
         return [
             'INITIAL' => [
                 self::WHITESPACE => UT_WHITESPACE,
-                self::COMMENT => UT_COMMENT,
+                self::INLINE_COMMENT => UT_COMMENT,
 
                 self::METHOD_CALL => function (Stateful $lexer) {
                     $lexer->swapState('METHOD_CALL');
@@ -136,7 +142,9 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                     $lexer->swapState('IN_FILE');
 
                     return UT_FILE_NOT_EXISTS;
-                }
+                },
+
+                self::COMMENT => UT_COMMENT
             ],
 
             'FUNCTION_CALL' => $procedureCall,
@@ -146,11 +154,12 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
 
                 // Internal types
                 self::WHITESPACE => UT_WHITESPACE,
-                self::COMMENT => UT_COMMENT,
+                self::INLINE_COMMENT => UT_COMMENT,
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::FLOAT => UT_FLOAT,
                 self::INTEGER => UT_INTEGER,
+                self::TYPE_ARRAY => UT_ARRAY,
 
                 // Arrays
                 'has key' => UT_ARRAY_CONTAINS_KEY,
@@ -186,12 +195,13 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 // Misc
                 self::ITERATIONS => $iterations,
                 ',' => UT_MORE,
-                self::END_STATEMENT => $endAssertion
+                self::END_STATEMENT => $endAssertion,
+                self::CONSTANT => UT_CONSTANT,
             ],
 
             'PROPERTY_REFERENCE' => [
                 self::WHITESPACE => UT_WHITESPACE,
-                self::COMMENT => UT_COMMENT,
+                self::INLINE_COMMENT => UT_COMMENT,
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
 
@@ -203,7 +213,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
 
             'IN_FILE' => [
                 self::WHITESPACE => UT_WHITESPACE,
-                self::COMMENT => UT_COMMENT,
+                self::INLINE_COMMENT => UT_COMMENT,
                 self::QUOTED_FILE_PATH => UT_FILE_PATH,
                 self::UNQUOTED_FILE_PATH => UT_FILE_PATH,
                 ',' => UT_MORE,
@@ -212,7 +222,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
 
             'ITERATIONS' => [
                 self::WHITESPACE => UT_WHITESPACE,
-                self::COMMENT => UT_COMMENT,
+                self::INLINE_COMMENT => UT_COMMENT,
                 '\d+' => UT_ITERATION,
                 ',' => UT_MORE,
                 self::END_STATEMENT => $endAssertion,

@@ -15,41 +15,50 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core;
+namespace JDWil\Unify\TestRunner\Command\Debugger;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
+use JDWil\Unify\TestRunner\Command\AbstractCommand;
 
 /**
- * Class AbstractComparisonAssertion
+ * Class Dump
  */
-abstract class AbstractComparisonAssertion extends AbstractPHPAssertion
+class Dump extends AbstractCommand
 {
     /**
      * @var string
      */
-    protected $variable;
+    private $variable;
+
+    private function __construct() {}
 
     /**
-     * @var mixed
-     */
-    protected $value;
-
-    /**
-     * @var mixed
-     */
-    protected $actualValue;
-
-    /**
-     * AssertEqual constructor.
      * @param string $variable
-     * @param mixed $value
-     * @param int $iteration
+     * @return Dump
      */
-    public function __construct($variable, $value, $iteration = 0)
+    public static function variable($variable)
     {
-        $this->variable = $variable;
-        $this->value = $value;
+        $ret = new Dump();
+        $ret->variable = $variable;
 
-        parent::__construct($iteration);
+        return $ret;
+    }
+
+    /**
+     * @return string
+     */
+    public function getXdebugCommand()
+    {
+        return sprintf(
+            "eval -i %%s -- %s\0",
+            base64_encode(sprintf('print_r(%s, true)', $this->variable))
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getDbgCommand()
+    {
+        return sprintf('ev print_r(%s, true)', $this->variable);
     }
 }

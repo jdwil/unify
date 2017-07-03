@@ -15,41 +15,14 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core;
+namespace JDWil\Unify\TestRunner\Unbounded;
 
-use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
+use JDWil\Unify\TestRunner\AbstractTestPlan;
 
 /**
- * Class AbstractComparisonAssertion
+ * Class UnboundedTestPlan
  */
-abstract class AbstractComparisonAssertion extends AbstractPHPAssertion
+class UnboundedTestPlan extends AbstractTestPlan
 {
-    /**
-     * @var string
-     */
-    protected $variable;
 
-    /**
-     * @var mixed
-     */
-    protected $value;
-
-    /**
-     * @var mixed
-     */
-    protected $actualValue;
-
-    /**
-     * AssertEqual constructor.
-     * @param string $variable
-     * @param mixed $value
-     * @param int $iteration
-     */
-    public function __construct($variable, $value, $iteration = 0)
-    {
-        $this->variable = $variable;
-        $this->value = $value;
-
-        parent::__construct($iteration);
-    }
 }

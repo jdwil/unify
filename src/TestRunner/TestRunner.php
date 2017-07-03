@@ -11,10 +11,13 @@
 
 namespace JDWil\Unify\TestRunner;
 
+use JDWil\Unify\Assertion\Unbounded\UnboundedAssertionQueue;
 use JDWil\Unify\TestRunner\PHP\XDebugSessionFactory;
 use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 use JDWil\Unify\TestRunner\Shell\CommandTester;
 use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
+use JDWil\Unify\TestRunner\Unbounded\UnboundedTester;
+use JDWil\Unify\TestRunner\Unbounded\UnboundedTestPlan;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -66,7 +69,7 @@ class TestRunner
             $progress->start();
         }
 
-        foreach ($this->testPlans as $testPlan) {
+        foreach ($this->testPlans as $i => $testPlan) {
             if ($testPlan instanceof PHPTestPlan) {
                 $this->debug('  Executing PHP test plan');
                 $session = $this->debugSessionFactory->create($this->output);
@@ -74,6 +77,10 @@ class TestRunner
             } else if ($testPlan instanceof ShellTestPlan) {
                 $this->debug('  Executing shell test plan');
                 $tester = new CommandTester($this->output);
+                $tester->test($testPlan);
+            } else if ($testPlan instanceof UnboundedTestPlan) {
+                $this->debug('  Executing unbounded test plan');
+                $tester = new UnboundedTester($this->testPlans, $i);
                 $tester->test($testPlan);
             }
 
@@ -142,7 +149,8 @@ class TestRunner
                     $failed++;
                     $failures[] = [
                         'file' => sprintf('%s:%s', $assertion->getFile(), $assertion->getLine()),
-                        'assertion' => (string) $assertion
+                        'assertion' => (string) $assertion,
+                        'failureMessage' => $assertion->getFailureMessage()
                     ];
                 }
             }
@@ -152,6 +160,8 @@ class TestRunner
         foreach ($failures as $failure) {
             $this->output->writeln(sprintf('  Failure in %s', $failure['file']));
             $this->output->writeln(sprintf('    %s failed', $failure['assertion']));
+            $this->output->writeln('');
+            $this->output->writeln($failure['failureMessage']);
             $this->output->writeln('');
         }
 

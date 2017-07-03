@@ -18,7 +18,10 @@
 namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\TestRunner\Command\Debugger\Dump;
 use JDWil\Unify\TestRunner\Command\Debugger\Variable;
+use JDWil\Unify\TestRunner\Command\ResponseInterface;
+use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
 /**
  * Class AssertEqual
@@ -33,6 +36,36 @@ class AssertEqual extends AbstractComparisonAssertion
         return [
             Variable::named($this->variable)->equals($this->value)
         ];
+    }
+
+    /**
+     * @return CommandInterface[]
+     */
+    public function getFailureCommands()
+    {
+        return [
+            Dump::variable($this->variable)
+        ];
+    }
+
+    /**
+     * @param ResponseInterface $response
+     */
+    public function handleFailureCommandResponse(ResponseInterface $response)
+    {
+        if ($response instanceof XdebugResponse) {
+            $this->actualValue = base64_decode($response->getEvalResponse());
+        } else {
+            $this->actualValue = $response->getResponse();
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getFailureMessage()
+    {
+        return sprintf("Expected: '%s'\nActual: '%s'\n", $this->value, $this->actualValue);
     }
 
     /**

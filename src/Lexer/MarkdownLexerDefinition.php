@@ -32,25 +32,40 @@ define('MD_SHELL_OPEN', 202);
 define('MD_SHELL_CODE', 203);
 define('MD_OTHER_OPEN', 204);
 define('MD_OTHER_CODE', 205);
+define('MD_STDOUT_OPEN', 206);
+define('MD_STDOUT', 207);
 
 class MarkdownLexerDefinition implements LexerDefinitionInterface
 {
     const PHP_CODE = '```php\n';
+    const STDOUT = '```stdout\n';
     const SHELL_CODE = '```(shell)|(bash)';
     const CODE_BLOCK = '```';
     const DIRECTIVE = '\[unify\]:\s+#\s+\(';
+    const CODE = '(.*?)(?=```)';
 
     /**
      * @return array
      */
     public function create()
     {
+        $endBlock = function (Stateful $lexer) {
+            $lexer->swapState('INITIAL');
+
+            return MD_CLOSE_CODE;
+        };
+
         return [
             'INITIAL' => [
                 self::PHP_CODE => function (Stateful $lexer) {
                     $lexer->swapState('PHP');
 
                     return MD_PHP_OPEN;
+                },
+                self::STDOUT => function (Stateful $lexer) {
+                    $lexer->swapState('STDOUT');
+
+                    return MD_STDOUT_OPEN;
                 },
                 self::SHELL_CODE => function (Stateful $lexer) {
                     $lexer->swapState('SHELL');
@@ -72,30 +87,23 @@ class MarkdownLexerDefinition implements LexerDefinitionInterface
             ],
 
             'PHP' => [
-                self::CODE_BLOCK => function (Stateful $lexer) {
-                    $lexer->swapState('INITIAL');
+                self::CODE_BLOCK => $endBlock,
+                self::CODE => MD_PHP_CODE
+            ],
 
-                    return MD_CLOSE_CODE;
-                },
-                '(.*?)(?=```)' => MD_PHP_CODE
+            'STDOUT' => [
+                self::CODE_BLOCK => $endBlock,
+                self::CODE => MD_STDOUT
             ],
 
             'SHELL' => [
-                self::CODE_BLOCK => function (Stateful $lexer) {
-                    $lexer->swapState('INITIAL');
-
-                    return MD_CLOSE_CODE;
-                },
-                '(.*?)(?=```)' => MD_SHELL_CODE
+                self::CODE_BLOCK => $endBlock,
+                self::CODE => MD_SHELL_CODE
             ],
 
             'OTHER_CODE' => [
-                self::CODE_BLOCK => function (Stateful $lexer) {
-                    $lexer->swapState('INITIAL');
-
-                    return MD_CLOSE_CODE;
-                },
-                '(.*?)(?=```)' => MD_OTHER_CODE
+                self::CODE_BLOCK => $endBlock,
+                self::CODE => MD_OTHER_CODE
             ],
 
             'DIRECTIVE' => [

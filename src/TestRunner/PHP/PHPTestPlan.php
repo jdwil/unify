@@ -21,12 +21,20 @@ use JDWil\Unify\Assertion\AssertionQueueInterface;
 use JDWil\Unify\TestRunner\AbstractTestPlan;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 
+/**
+ * Class PHPTestPlan
+ */
 class PHPTestPlan extends AbstractTestPlan
 {
     /**
      * @var CommandInterface[]
      */
     private $commands;
+
+    /**
+     * @var string
+     */
+    private $output;
 
     /**
      * PHPTestPlan constructor.
@@ -39,6 +47,7 @@ class PHPTestPlan extends AbstractTestPlan
     {
         parent::__construct($file, $subject, $assertionQueue);
         $this->commands = $commands;
+        $this->output = '';
     }
 
     /**
@@ -47,5 +56,21 @@ class PHPTestPlan extends AbstractTestPlan
     public function getCommands()
     {
         return $this->commands;
+    }
+
+    /**
+     * @param string $output
+     */
+    public function appendOutput($output)
+    {
+        $this->output .= $output;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOutput()
+    {
+        return $this->output;
     }
 }

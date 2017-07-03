@@ -27,6 +27,8 @@ abstract class AbstractComparisonParser extends AbstractPHPParser
     const TYPE_STRING = 'string';
     const TYPE_INTEGER = 'integer';
     const TYPE_FLOAT = 'float';
+    const TYPE_ARRAY = 'array';
+    const TYPE_CONSTANT = 'constant';
 
     /**
      * @return AssertionInterface[]|false
@@ -41,7 +43,6 @@ abstract class AbstractComparisonParser extends AbstractPHPParser
         $variable = null;
 
         while ($token = $this->next()) {
-            // @todo add arrays, plus more I'm sure.
             switch ($token[self::TYPE]) {
                 case UT_VARIABLE:
                     $variable = $token[self::VALUE];
@@ -59,6 +60,16 @@ abstract class AbstractComparisonParser extends AbstractPHPParser
 
                 case UT_INTEGER:
                     $valueTypes[] = self::TYPE_INTEGER;
+                    $values[] = $token[self::VALUE];
+                    break;
+
+                case UT_ARRAY:
+                    $valueTypes[] = self::TYPE_ARRAY;
+                    $values[] = $token[self::VALUE];
+                    break;
+
+                case UT_CONSTANT:
+                    $valueTypes[] = self::TYPE_CONSTANT;
                     $values[] = $token[self::VALUE];
                     break;
             }
