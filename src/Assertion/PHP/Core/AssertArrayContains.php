@@ -21,16 +21,16 @@ use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 
 /**
- * Class AssertStrictEqual
+ * Class AssertArrayContains
  */
-class AssertStrictEqual extends AbstractComparisonAssertion
+class AssertArrayContains extends AbstractComparisonAssertion
 {
     /**
      * @return string
      */
     public function __toString()
     {
-        return sprintf('Assert %s strictly matches %s', $this->variable, (string) $this->value);
+        return sprintf('Assert %s contains %s', $this->variable, (string) $this->value);
     }
 
     /**
@@ -39,7 +39,7 @@ class AssertStrictEqual extends AbstractComparisonAssertion
     public function getDebuggerCommands()
     {
         return [
-            Subject::named($this->variable)->strictlyEquals($this->value)
+            Subject::named($this->variable)->contains($this->value)
         ];
     }
 }

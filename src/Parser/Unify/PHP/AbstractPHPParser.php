@@ -106,7 +106,7 @@ abstract class AbstractPHPParser implements PHPParserInterface
     }
 
     /**
-     * @return array|false
+     * @return array
      */
     protected function getIterations()
     {
@@ -128,6 +128,10 @@ abstract class AbstractPHPParser implements PHPParserInterface
         }
 
         $this->index = $start;
+
+        if (!$iterations) {
+            $iterations = [0];
+        }
 
         return $iterations;
     }

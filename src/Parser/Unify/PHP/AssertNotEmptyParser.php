@@ -15,31 +15,43 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Assertion\PHP\Core;
+namespace JDWil\Unify\Parser\Unify\PHP;
 
-use JDWil\Unify\TestRunner\Command\CommandInterface;
-use JDWil\Unify\TestRunner\Command\Debugger\Subject;
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\PHP\Core\AssertNotEmpty;
 
-/**
- * Class AssertStrictEqual
- */
-class AssertStrictEqual extends AbstractComparisonAssertion
+class AssertNotEmptyParser extends AbstractPHPParser
 {
     /**
-     * @return string
+     * @return false|AssertionInterface[]
      */
-    public function __toString()
+    public function parse()
     {
-        return sprintf('Assert %s strictly matches %s', $this->variable, (string) $this->value);
-    }
+        if (!$this->containsToken([UT_NOT_EMPTY])) {
+            return false;
+        }
 
-    /**
-     * @return CommandInterface[]
-     */
-    public function getDebuggerCommands()
-    {
-        return [
-            Subject::named($this->variable)->strictlyEquals($this->value)
-        ];
+        $subject = null;
+
+        while ($token = $this->next()) {
+            switch ($token[self::TYPE]) {
+                case UT_VARIABLE:
+                case UT_FUNCTION_CALL:
+                case UT_METHOD_CALL:
+                    $subject = $token[self::VALUE];
+                    break;
+            }
+        }
+
+        if (null === $subject) {
+            return false;
+        }
+
+        $ret = [];
+        foreach ($this->getIterations() as $iteration) {
+            $ret[] = new AssertNotEmpty($subject, $iteration);
+        }
+
+        return $ret;
     }
 }

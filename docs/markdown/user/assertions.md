@@ -5,7 +5,10 @@
 ## Table of Contents
 
 1. [Arrays](#arrays)
+    1. [Array Contains](#array-contains)
+    1. [Array Count](#array-count)
     1. [Array Has Key](#array-has-key)
+    1. [Array is (not) Empty](#array-empty)
 1. [Classes](#classes)
     1. [Class Has Property](#class-has-property)
     1. [Class Doesn't Have Property](#class-lacks-property)
@@ -18,6 +21,42 @@
 <a name="arrays" />
 
 ## Arrays
+
+<a name="array-contains" />
+
+#### Array Contains
+
+You can assert that an array contains certain elements, including another array.
+
+```php
+<?php
+
+/*
+ * $x contains 'foo'.
+ * $x contains 1000.
+ * $x contains ['a', 'b', 'c'].
+ */
+$x = [
+    0 => 'foo',
+    1 => 1000,
+    2 => [
+        'a', 'b', 'c'
+    ]
+];
+```
+
+<a name="array-count" />
+
+#### Array Count
+
+Ensure an array has the proper number of elements.
+
+```php
+<?php
+
+$x = [1];       // $x has 1 element
+$y = [1, 2];    // $y contains 2 elements
+```
 
 <a name="array-has-key" />
 
@@ -58,6 +97,22 @@ for ($i = 0; $i <= 1; $i++) {
 function baz($i) {
     return $i === 0 ? ['foo' => 'bar'] : [];
 }
+```
+
+<a name="array-empty" />
+
+#### Array is (not) Empty
+
+Empty works the same was as PHP's `empty()` function. It can be used with arrays or non-arrays.
+
+```php
+<?php
+
+$x = [];    // $x is empty
+$y = null;  // $y is empty
+
+$a = [1];   // $a is not empty
+$b = 'foo'; // $b is not empty
 ```
 
 <a name="classes" />

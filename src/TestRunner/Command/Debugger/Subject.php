@@ -20,9 +20,9 @@ namespace JDWil\Unify\TestRunner\Command\Debugger;
 use JDWil\Unify\TestRunner\Command\AbstractCommand;
 
 /**
- * Class Variable
+ * Class Subject
  */
-class Variable extends AbstractCommand
+class Subject extends AbstractCommand
 {
     const EQUALS = '==';
     const STRICT_EQUALS = '===';
@@ -32,6 +32,8 @@ class Variable extends AbstractCommand
     const LESS_THAN_OR_EQUAL = '<=';
     const GREATER_THAN = '>';
     const GREATER_THAN_OR_EQUAL = '>=';
+    const CONTAINS = 'contains';
+    const IS_EMPTY = 'empty';
 
     /**
      * @var string
@@ -52,11 +54,11 @@ class Variable extends AbstractCommand
 
     /**
      * @param string $subject
-     * @return Variable
+     * @return Subject
      */
     public static function named($subject)
     {
-        $ret = new Variable();
+        $ret = new Subject();
         $ret->subject = $subject;
 
         return $ret;
@@ -155,6 +157,28 @@ class Variable extends AbstractCommand
     }
 
     /**
+     * @param string $value
+     * @return $this
+     */
+    public function contains($value)
+    {
+        $this->comparisonType = self::CONTAINS;
+        $this->value = $value;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function isEmpty()
+    {
+        $this->comparisonType = self::IS_EMPTY;
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getXdebugCommand()
@@ -178,6 +202,15 @@ class Variable extends AbstractCommand
      */
     private function getEvalStatement()
     {
-        return sprintf('%s %s %s', $this->subject, $this->comparisonType, (string) $this->value);
+        switch ($this->comparisonType) {
+            case self::CONTAINS:
+                return sprintf('in_array(%s, %s)', (string) $this->value, $this->subject);
+
+            case self::IS_EMPTY:
+                return sprintf('empty(%s)', $this->subject);
+
+            default:
+                return sprintf('%s %s %s', $this->subject, $this->comparisonType, (string) $this->value);
+        }
     }
 }

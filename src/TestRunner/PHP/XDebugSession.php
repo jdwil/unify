@@ -39,14 +39,6 @@ use Symfony\Component\Process\Process;
  */
 class XDebugSession extends AbstractSession
 {
-    private static $FLAGS = [
-        'xdebug.remote_connect_back' => '1',
-        'xdebug.profiler_enable' => '1',
-        'xdebug.remote_enable' => '1',
-        'xdebug.idekey' => 'unify',
-        'xdebug.remote_autostart' => 'true',
-    ];
-
     /**
      * @var PHPTestPlan
      */
@@ -581,21 +573,12 @@ class XDebugSession extends AbstractSession
     {
         if (null === $testPlan->getSubject()) {
             $command = 'php';
-            foreach (self::$FLAGS as $flag => $value) {
-                $command = sprintf('%s -d %s=%s', $command, $flag, $value);
-            }
-
             $command = sprintf('%s -d xdebug.remote_host="%s"', $command, $this->host);
             $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
             $command = sprintf('%s %s &', $command, $testPlan->getFile());
         } else {
             $source = $testPlan->getSubject();
-            $source .= "\n\nexit(0);";
             $command = sprintf('echo %s | php', escapeshellarg($source));
-            foreach (self::$FLAGS as $flag => $value) {
-                $command = sprintf('%s -d %s=%s', $command, $flag, $value);
-            }
-
             $command = sprintf('%s -d xdebug.remote_host="%s"', $command, $this->host);
             $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
             $command = sprintf('%s &', $command);

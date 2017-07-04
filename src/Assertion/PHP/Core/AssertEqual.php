@@ -19,7 +19,7 @@ namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\Debugger\Dump;
-use JDWil\Unify\TestRunner\Command\Debugger\Variable;
+use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 use JDWil\Unify\TestRunner\Command\ResponseInterface;
 use JDWil\Unify\TestRunner\Command\XdebugResponse;
 
@@ -34,7 +34,7 @@ class AssertEqual extends AbstractComparisonAssertion
     public function getDebuggerCommands()
     {
         return [
-            Variable::named($this->variable)->equals($this->value)
+            Subject::named($this->variable)->equals($this->value)
         ];
     }
 

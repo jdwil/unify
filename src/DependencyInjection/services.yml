@@ -68,7 +68,11 @@ services:
         class: JDWil\Unify\Parser\Unify\PHP\PHPUnifyParserPipeline
         arguments:
             -
+                - "@php_assert_array_contains"
+                - "@php_assert_array_count"
                 - "@php_assert_array_has_key"
+                - "@php_assert_empty"
+                - "@php_assert_not_empty"
                 - "@php_assert_equal"
                 - "@php_assert_not_equal"
                 - "@php_assert_less_than"
@@ -81,8 +85,20 @@ services:
                 - "@php_assert_property_not_exists"
                 - "@php_redefine_procedure"
 
+    php_assert_array_contains:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertArrayContainsParser
+
+    php_assert_array_count:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertArrayCountParser
+
     php_assert_array_has_key:
         class: JDWil\Unify\Parser\Unify\PHP\AssertArrayHasKeyParser
+
+    php_assert_empty:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertEmptyParser
+
+    php_assert_not_empty:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertNotEmptyParser
 
     php_assert_equal:
         class: JDWil\Unify\Parser\Unify\PHP\AssertEqualParser

@@ -18,7 +18,7 @@
 namespace JDWil\Unify\Assertion\PHP\Core;
 
 use JDWil\Unify\TestRunner\Command\CommandInterface;
-use JDWil\Unify\TestRunner\Command\Debugger\Variable;
+use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 
 /**
  * Class AssertGreaterThanOrEqual
@@ -39,7 +39,7 @@ class AssertGreaterThanOrEqual extends AbstractComparisonAssertion
     public function getDebuggerCommands()
     {
         return [
-            Variable::named($this->variable)->isGreaterThanOrEqualTo($this->value)
+            Subject::named($this->variable)->isGreaterThanOrEqualTo($this->value)
         ];
     }
 }

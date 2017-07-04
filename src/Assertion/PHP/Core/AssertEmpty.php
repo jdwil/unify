@@ -17,20 +17,38 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core;
 
+use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 
 /**
- * Class AssertStrictEqual
+ * Class AssertEmpty
  */
-class AssertStrictEqual extends AbstractComparisonAssertion
+class AssertEmpty extends AbstractPHPAssertion
 {
+    /**
+     * @var string
+     */
+    private $subject;
+
+    /**
+     * AssertEmpty constructor.
+     * @param string $subject
+     * @param int $iteration
+     */
+    public function __construct($subject, $iteration = 0)
+    {
+        parent::__construct($iteration);
+
+        $this->subject = $subject;
+    }
+
     /**
      * @return string
      */
     public function __toString()
     {
-        return sprintf('Assert %s strictly matches %s', $this->variable, (string) $this->value);
+        return sprintf('Assert %s is empty', $this->subject);
     }
 
     /**
@@ -39,7 +57,7 @@ class AssertStrictEqual extends AbstractComparisonAssertion
     public function getDebuggerCommands()
     {
         return [
-            Subject::named($this->variable)->strictlyEquals($this->value)
+            Subject::named($this->subject)->isEmpty()
         ];
     }
 }

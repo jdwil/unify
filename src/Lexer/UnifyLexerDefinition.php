@@ -46,6 +46,10 @@ define('UT_NOT_EQUALS', 129);
 define('UT_NOT_EQUALS_MATCH_TYPE', 130);
 define('UT_ARRAY', 131);
 define('UT_CONSTANT', 132);
+define('UT_ARRAY_CONTAINS', 133);
+define('UT_DESCRIPTOR', 134);
+define('UT_EMPTY', 135);
+define('UT_NOT_EMPTY', 136);
 
 /**
  * Class UnifyLexerDefinition
@@ -85,6 +89,8 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             self::INTEGER => UT_INTEGER,
             self::TYPE_ARRAY => UT_ARRAY,
 
+            'is empty' => UT_EMPTY,
+            'is not empty' => UT_NOT_EMPTY,
             'will( always)? return' => UT_ALWAYS_RETURN,
 
             self::END_STATEMENT => function (Stateful $lexer) {
@@ -161,6 +167,9 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::INTEGER => UT_INTEGER,
                 self::TYPE_ARRAY => UT_ARRAY,
 
+                'is empty' => UT_EMPTY,
+                'is not empty' => UT_NOT_EMPTY,
+
                 // Arrays
                 'has key' => UT_ARRAY_CONTAINS_KEY,
                 'is set' => UT_ARRAY_CONTAINS_KEY,
@@ -192,6 +201,13 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 'now equals' => UT_EQUALS,
                 'equals' => UT_EQUALS,
 
+                // Arrays
+                'contains|has' => function (Stateful $lexer) {
+                    $lexer->swapState('ARRAY_CONTAINS');
+
+                    return UT_ARRAY_CONTAINS;
+                },
+
                 // Misc
                 self::ITERATIONS => $iterations,
                 ',' => UT_MORE,
@@ -205,6 +221,8 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
 
+                'is empty' => UT_EMPTY,
+                'is not empty' => UT_NOT_EMPTY,
                 'exists' => UT_OBJECT_HAS_PROPERTY,
                 'doesn?\'?t?( not)? exist' => UT_OBJECT_NOT_HAS_PROPERTY,
 
@@ -224,6 +242,21 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::WHITESPACE => UT_WHITESPACE,
                 self::INLINE_COMMENT => UT_COMMENT,
                 '\d+' => UT_ITERATION,
+                ',' => UT_MORE,
+                self::END_STATEMENT => $endAssertion,
+            ],
+
+            'ARRAY_CONTAINS' => [
+                self::WHITESPACE => UT_WHITESPACE,
+                self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
+                self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
+                self::FLOAT => UT_FLOAT,
+                self::INTEGER => UT_INTEGER,
+                self::TYPE_ARRAY => UT_ARRAY,
+
+                'items?|elements?|values?' => UT_DESCRIPTOR,
+
+                self::ITERATIONS => $iterations,
                 ',' => UT_MORE,
                 self::END_STATEMENT => $endAssertion,
             ]

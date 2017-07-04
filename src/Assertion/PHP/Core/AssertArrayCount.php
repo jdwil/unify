@@ -17,20 +17,45 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core;
 
+use JDWil\Unify\Assertion\PHP\AbstractPHPAssertion;
 use JDWil\Unify\TestRunner\Command\CommandInterface;
 use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 
 /**
- * Class AssertStrictEqual
+ * Class AssertArrayCount
  */
-class AssertStrictEqual extends AbstractComparisonAssertion
+class AssertArrayCount extends AbstractPHPAssertion
 {
+    /**
+     * @var string
+     */
+    private $variable;
+
+    /**
+     * @var int
+     */
+    private $count;
+
+    /**
+     * AssertArrayCount constructor.
+     * @param string $variable
+     * @param int $count
+     * @param int $iteration
+     */
+    public function __construct($variable, $count, $iteration = 0)
+    {
+        parent::__construct($iteration);
+
+        $this->variable = $variable;
+        $this->count = $count;
+    }
+
     /**
      * @return string
      */
     public function __toString()
     {
-        return sprintf('Assert %s strictly matches %s', $this->variable, (string) $this->value);
+        return sprintf('Assert %s contains %d elements.', $this->variable, $this->count);
     }
 
     /**
@@ -39,7 +64,7 @@ class AssertStrictEqual extends AbstractComparisonAssertion
     public function getDebuggerCommands()
     {
         return [
-            Subject::named($this->variable)->strictlyEquals($this->value)
+            Subject::named(sprintf('count(%s)', $this->variable))->equals($this->count)
         ];
     }
 }

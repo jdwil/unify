@@ -17,7 +17,7 @@
 
 namespace JDWil\Unify\Assertion\PHP\Core;
 
-use JDWil\Unify\TestRunner\Command\Debugger\Variable;
+use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 
 /**
  * Class AssertLessThan
@@ -38,7 +38,7 @@ class AssertLessThan extends AbstractComparisonAssertion
     public function getDebuggerCommands()
     {
         return [
-            Variable::named($this->variable)->isLessThan($this->value)
+            Subject::named($this->variable)->isLessThan($this->value)
         ];
     }
 }
