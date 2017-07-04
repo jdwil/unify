@@ -1,6 +1,8 @@
 # Shell Lexer
 
-The Shell Lexer contains the token information relating to the grammar used to describe Shell commands. It's the
+[&laquo; Back](../unify.md)
+
+The `ShellLexerDefinition` contains the token information relating to the grammar used to describe Shell commands. It's the
 simplest lexer in Unify. When Unify encounters a Shell command in a documentation parser, it sends its code through
 the lexer before parsing its contents.
 

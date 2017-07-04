@@ -24,6 +24,9 @@ use Phlexy\Lexer\Stateful;
  */
 class MarkdownParser
 {
+    const SKIP_NEXT = 'skip';
+    const SETUP = 'setup';
+
     /**
      * @var string
      */
@@ -50,6 +53,16 @@ class MarkdownParser
     private $autoloadPath;
 
     /**
+     * @var string
+     */
+    private $setupCode;
+
+    /**
+     * @var array
+     */
+    private $directives;
+
+    /**
      * MarkdownParser constructor.
      * @param Stateful $lexer
      * @param ParserFactory $parserFactory
@@ -61,10 +74,13 @@ class MarkdownParser
         $this->parserFactory = $parserFactory;
         $this->autoloadPath = $autoloadPath;
         $this->testPlans = [];
+        $this->directives = [];
+        $this->setupCode = '';
     }
 
     /**
      * @param string $file
+     * @throws \Exception
      */
     public function parse($file)
     {
@@ -72,37 +88,38 @@ class MarkdownParser
 
         $tokens = $this->lexer->lex(file_get_contents($file));
 
-        $skipNextBlock = false;
         foreach ($tokens as $token) {
             switch ($token[0]) {
                 case MD_DIRECTIVE:
-                    if ($token[2] === 'skip') {
-                        $skipNextBlock = true;
-                    }
+                    $this->addDirective($token[2], true);
                     break;
 
                 case MD_PHP_CODE:
-                    if ($skipNextBlock) {
-                        $skipNextBlock = false;
-                    } else {
+                    if (!$this->hasDirective(self::SKIP_NEXT)) {
                         $this->createPhpTestPlan($token[2]);
                     }
+
+                    if ($this->hasDirective(self::SETUP)) {
+                        $this->appendSetupCode($token[2]);
+                    }
+
+                    $this->clearDirectives();
                     break;
 
                 case MD_SHELL_CODE:
-                    if ($skipNextBlock) {
-                        $skipNextBlock = false;
-                    } else {
+                    if (!$this->hasDirective(self::SKIP_NEXT)) {
                         $this->createShellTestPlan($token[2]);
                     }
+
+                    $this->clearDirectives();
                     break;
 
                 case MD_STDOUT:
-                    if ($skipNextBlock) {
-                        $skipNextBlock = false;
-                    } else {
+                    if (!$this->hasDirective(self::SKIP_NEXT)) {
                         $this->createUnboundedTestPlan($token[2]);
                     }
+
+                    $this->clearDirectives();
                     break;
             }
         }
@@ -123,6 +140,10 @@ class MarkdownParser
      */
     private function createPhpTestPlan($codeBlock)
     {
+        if (!empty($this->setupCode)) {
+            $codeBlock = preg_replace('/<\?php/', sprintf('<?php %s', $this->setupCode), $codeBlock, 1);
+        }
+
         $codeBlock = preg_replace('/<\?php/', sprintf('<?php require_once "%s";', $this->autoloadPath), $codeBlock, 1);
         $codeBlock = $this->fixCodeBlock($codeBlock);
         $parser = $this->parserFactory->createPhpParser($this->file);
@@ -169,5 +190,36 @@ class MarkdownParser
         $code = sprintf("%s\nexit(0);", $code);
 
         return $code;
+    }
+
+    /**
+     * @param string $directive
+     * @return bool
+     */
+    private function hasDirective($directive)
+    {
+        return isset($this->directives[$directive]) && $this->directives[$directive];
+    }
+
+    /**
+     * @param string $directive
+     * @param mixed $value
+     */
+    private function addDirective($directive, $value)
+    {
+        $this->directives[$directive] = $value;
+    }
+
+    private function clearDirectives()
+    {
+        $this->directives = [];
+    }
+
+    /**
+     * @param string $code
+     */
+    private function appendSetupCode($code)
+    {
+        $this->setupCode .= str_replace('<?php', '', $code);
     }
 }

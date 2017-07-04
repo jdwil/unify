@@ -26,6 +26,7 @@ define('MD_DIRECTIVE', 103);
 define('MD_LANGUAGE', 104);
 define('MD_DIRECTIVE_OPEN', 105);
 define('MD_DIRECTIVE_CLOSE', 106);
+define('MD_DIRECTIVE_MORE', 107);
 define('MD_PHP_OPEN', 200);
 define('MD_PHP_CODE', 201);
 define('MD_SHELL_OPEN', 202);
@@ -107,7 +108,8 @@ class MarkdownLexerDefinition implements LexerDefinitionInterface
             ],
 
             'DIRECTIVE' => [
-                '[^\)]+' => MD_DIRECTIVE,
+                '[^\),]+' => MD_DIRECTIVE,
+                ',' => MD_DIRECTIVE_MORE,
                 '\)' => function (Stateful $lexer) {
                     $lexer->swapState('INITIAL');
 

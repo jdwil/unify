@@ -15,4 +15,8 @@ help you forget about all the time you slaved over unit tests before Unify.
 
 ## Documentation
 
-The full documentation can be found [here](docs/markdown/user/unify.md).
+The full user documentation can be found 
+[here](docs/markdown/user/unify.md).
+
+The full developer documentation can be found 
+[here](docs/markdown/developer/unify.md).
