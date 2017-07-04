@@ -50,6 +50,11 @@ define('UT_ARRAY_CONTAINS', 133);
 define('UT_DESCRIPTOR', 134);
 define('UT_EMPTY', 135);
 define('UT_NOT_EMPTY', 136);
+define('UT_CONTAINS_ONLY', 137);
+define('UT_IS_READABLE', 138);
+define('UT_IS_NOT_READABLE', 139);
+define('UT_IS_WRITABLE', 140);
+define('UT_IS_NOT_WRITABLE', 141);
 
 /**
  * Class UnifyLexerDefinition
@@ -112,6 +117,12 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             return UT_END_ASSERTION;
         };
 
+        $filePath = function (Stateful $lexer) {
+            $lexer->swapState('PATH');
+
+            return UT_FILE_PATH;
+        };
+
         return [
             'INITIAL' => [
                 self::WHITESPACE => UT_WHITESPACE,
@@ -137,6 +148,8 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
 
                     return UT_FUNCTION_CALL;
                 },
+                self::QUOTED_FILE_PATH => $filePath,
+                self::UNQUOTED_FILE_PATH => $filePath,
 
                 'creates?( files?)?' => function (Stateful $lexer) {
                     $lexer->swapState('IN_FILE');
@@ -173,6 +186,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 // Arrays
                 'has key' => UT_ARRAY_CONTAINS_KEY,
                 'is set' => UT_ARRAY_CONTAINS_KEY,
+                'contains only' => UT_CONTAINS_ONLY,
 
                 // Objects
                 'has property' => UT_OBJECT_HAS_PROPERTY,
@@ -255,6 +269,20 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::TYPE_ARRAY => UT_ARRAY,
 
                 'items?|elements?|values?' => UT_DESCRIPTOR,
+
+                self::ITERATIONS => $iterations,
+                ',' => UT_MORE,
+                self::END_STATEMENT => $endAssertion,
+            ],
+
+            'PATH' => [
+                self::WHITESPACE => UT_WHITESPACE,
+                'exists' => UT_FILE_EXISTS,
+                'doesn?\'?t?( not)? exist' => UT_FILE_NOT_EXISTS,
+                'is readable' => UT_IS_READABLE,
+                'isn?\'?t?( not)? readable' => UT_IS_NOT_READABLE,
+                'is writable' => UT_IS_WRITABLE,
+                'isn?\'?t?( not)? writable' => UT_IS_NOT_WRITABLE,
 
                 self::ITERATIONS => $iterations,
                 ',' => UT_MORE,

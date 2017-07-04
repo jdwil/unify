@@ -68,6 +68,7 @@ services:
         class: JDWil\Unify\Parser\Unify\PHP\PHPUnifyParserPipeline
         arguments:
             -
+                - "@php_assert_contains_only"
                 - "@php_assert_array_contains"
                 - "@php_assert_array_count"
                 - "@php_assert_array_has_key"
@@ -83,7 +84,14 @@ services:
                 - "@php_assert_file_not_exists"
                 - "@php_assert_property_exists"
                 - "@php_assert_property_not_exists"
+                - "@php_assert_readable"
+                - "@php_assert_not_readable"
+                - "@php_assert_writable"
+                - "@php_assert_not_writable"
                 - "@php_redefine_procedure"
+
+    php_assert_contains_only:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertContainsOnlyParser
 
     php_assert_array_contains:
         class: JDWil\Unify\Parser\Unify\PHP\AssertArrayContainsParser
@@ -119,16 +127,28 @@ services:
         class: JDWil\Unify\Parser\Unify\PHP\AssertGreaterThanOrEqualParser
 
     php_assert_file_exists:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertFileExistsParser
+        class: JDWil\Unify\Parser\Unify\PHP\AssertExistsParser
 
     php_assert_file_not_exists:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertFileNotExistsParser
+        class: JDWil\Unify\Parser\Unify\PHP\AssertNotExistsParser
 
     php_assert_property_exists:
         class: JDWil\Unify\Parser\Unify\PHP\AssertPropertyExistsParser
 
     php_assert_property_not_exists:
         class: JDWil\Unify\Parser\Unify\PHP\AssertPropertyNotExistsParser
+
+    php_assert_readable:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertReadableParser
+
+    php_assert_not_readable:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertNotReadableParser
+
+    php_assert_writable:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertWritableParser
+
+    php_assert_not_writable:
+        class: JDWil\Unify\Parser\Unify\PHP\AssertNotWritableParser
 
     php_redefine_procedure:
         class: JDWil\Unify\Parser\Unify\PHP\RedefineProcedureParser

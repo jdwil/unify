@@ -34,6 +34,7 @@ class Subject extends AbstractCommand
     const GREATER_THAN_OR_EQUAL = '>=';
     const CONTAINS = 'contains';
     const IS_EMPTY = 'empty';
+    const CONTAINS_ONLY = 'contains_only';
 
     /**
      * @var string
@@ -179,6 +180,18 @@ class Subject extends AbstractCommand
     }
 
     /**
+     * @param string $value
+     * @return $this
+     */
+    public function containsOnly($value)
+    {
+        $this->comparisonType = self::CONTAINS_ONLY;
+        $this->value = $value;
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getXdebugCommand()
@@ -209,8 +222,44 @@ class Subject extends AbstractCommand
             case self::IS_EMPTY:
                 return sprintf('empty(%s)', $this->subject);
 
+            case self::CONTAINS_ONLY:
+                return sprintf('%s === array_filter(%s, %s)', $this->subject, $this->subject, $this->buildFilterClosure());
+
             default:
                 return sprintf('%s %s %s', $this->subject, $this->comparisonType, (string) $this->value);
+        }
+    }
+
+    /**
+     * @return string
+     */
+    private function buildFilterClosure()
+    {
+        switch ($this->value) {
+            case 'int':
+            case 'ints':
+            case 'integer':
+            case 'integers':
+                return 'is_int';
+
+            case 'string':
+            case 'strings':
+                return 'is_string';
+
+            case 'float':
+            case 'double':
+            case 'floats':
+            case 'doubles':
+                return 'is_float';
+
+            case 'numbers':
+                return 'is_numeric';
+
+            case 'arrays':
+                return 'is_array';
+
+            default:
+                return sprintf('function ($x) { return $x instanceof %s; }', $this->value);
         }
     }
 }

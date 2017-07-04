@@ -6,6 +6,7 @@
 
 1. [Arrays](#arrays)
     1. [Array Contains](#array-contains)
+    1. [Array Contains Only](#array-contains-only)
     1. [Array Count](#array-count)
     1. [Array Has Key](#array-has-key)
     1. [Array is (not) Empty](#array-empty)
@@ -15,8 +16,10 @@
 1. [Equality](#equality)
     1. [Variables](#variable-equality)
 1. [File System](#filesystem)
-    1. [File Exists](#file-exists)
-    1. [File Doesn't Exist](#file-not-exists)
+    1. [Exists](#exists)
+    1. [Doesn't Exist](#not-exists)
+    1. [Readable / Not Readable](#readable)
+    1. [Writable / Not Writable](#writable)
   
 <a name="arrays" />
 
@@ -43,6 +46,23 @@ $x = [
         'a', 'b', 'c'
     ]
 ];
+```
+
+<a name="array-contains-only" />
+
+#### Array Contains Only
+
+```php
+<?php
+
+$a = [1, 2, 3];     // $a contains only integers
+$b = ['a', 'b'];    // $b contains only strings
+$c = [0.1, 0.2];    // $c contains only floats
+$d = [new Foo()];   // $d contains only Foo
+$e = [[0], [1]];    // $e contains only arrays
+$f = [1, 1.2];      // $f contains only numbers
+
+class Foo {}
 ```
 
 <a name="array-count" />
@@ -269,9 +289,9 @@ $y = 2;
 
 ## File System
 
-<a name="file-exists" />
+<a name="exists" />
 
-#### File Exists
+#### Exists
 
 ```php
 <?php
@@ -286,11 +306,14 @@ $filesystem = new Filesystem();
  */
 $filesystem->touch('/tmp/test.txt');
 $filesystem->remove('/tmp/test.txt');
+
+$filesystem->touch('/tmp/test.txt');    // /tmp/test.txt exists
+$filesystem->remove('/tmp/test.txt');   // /tmp/test.txt doesn't exist
 ```
 
-<a name="file-not-exists" />
+<a name="not-exists" />
 
-#### File Doesn't Exists
+#### Doesn't Exists
 
 ```php
 <?php
@@ -305,4 +328,39 @@ $filesystem->touch('/tmp/test.txt');
  * Delete file /tmp/test.txt . (Beware a dot line-ending when using a file path. Notice the space.)
  */
 $filesystem->remove('/tmp/test.txt');
+
+$filesystem->touch('/tmp/test.txt');    // /tmp/test.txt exists
+$filesystem->remove('/tmp/test.txt');   // /tmp/test.txt doesn't exist
+```
+
+<a name="readable" />
+
+#### Readable / Not Readable
+
+```php
+<?php
+
+use Symfony\Component\Filesystem\Filesystem;
+
+$filesystem = new Filesystem();
+
+$filesystem->touch('/tmp/test.txt');        // /tmp/test.txt is readable
+$filesystem->chmod('/tmp/test.txt', 0222);  // /tmp/test.txt isn't readable
+$filesystem->remove('/tmp/test.txt');       // /tmp/test.txt doesn't exist
+```
+
+<a name="writable" />
+
+#### Writable / Not Writable
+
+```php
+<?php
+
+use Symfony\Component\Filesystem\Filesystem;
+
+$filesystem = new Filesystem();
+
+$filesystem->touch('/tmp/test.txt');        // /tmp/test.txt is writable
+$filesystem->chmod('/tmp/test.txt', 0444);  // /tmp/test.txt isn't writable
+$filesystem->remove('/tmp/test.txt');       // /tmp/test.txt doesn't exist
 ```

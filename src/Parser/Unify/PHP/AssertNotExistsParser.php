@@ -17,61 +17,28 @@
 
 namespace JDWil\Unify\Parser\Unify\PHP;
 
-use JDWil\Unify\Assertion\PHP\Core\AssertFileExists;
-use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\PHP\Core\AssertNotExists;
 
 /**
- * Class AssertFileExistsParser
+ * Class AssertFileNotExistsParser
  */
-class AssertFileExistsParser extends AbstractPHPParser
+class AssertNotExistsParser extends AssertExistsParser
 {
-    /**
-     * @return AssertionInterface[]|false
-     */
-    public function parse()
-    {
-        if (!$this->containsToken($this->getValidTokens())) {
-            return false;
-        }
-
-        $files = [];
-
-        while ($token = $this->next()) {
-            switch ($token[self::TYPE]) {
-                case UT_FILE_PATH:
-                    $files[] = $token[self::VALUE];
-                    break;
-            }
-        }
-
-        $assertions = [];
-        foreach ($files as $index => $file) {
-            if (!in_array($file[0], ['"', "'"], true)) {
-                $file = sprintf("'%s'", $file);
-            }
-
-            $assertions[] = $this->newAssertion($file, count($files) > 1 ? $index + 1 : 0);
-        }
-
-        return $assertions;
-    }
-
     /**
      * @return array
      */
     protected function getValidTokens()
     {
-        return [UT_FILE_EXISTS];
+        return [UT_FILE_NOT_EXISTS];
     }
 
     /**
      * @param string $file
      * @param int $iteration
-     * @return AssertFileExists
+     * @return AssertNotExists
      */
     protected function newAssertion($file, $iteration = 0)
     {
-        return new AssertFileExists($file, $iteration);
+        return new AssertNotExists($file, $iteration);
     }
-
 }
