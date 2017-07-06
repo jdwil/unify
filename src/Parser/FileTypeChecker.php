@@ -16,13 +16,12 @@ class FileTypeChecker
     const PHP = 0;
     const MARKDOWN = 1;
     const REDCLOTH = 2;
-    const RDOC = 3;
-    const ORG = 4;
-    const CREOLE = 5;
-    const MEDIAWIKI = 6;
-    const SPHINX = 7;
-    const ASCIIDOC = 8;
-    const POD = 9;
+    const ORG = 3;
+    const CREOLE = 4;
+    const MEDIAWIKI = 5;
+    const SPHINX = 6;
+    const ASCIIDOC = 7;
+    const POD = 8;
 
     public function determineType($path)
     {
@@ -40,9 +39,6 @@ class FileTypeChecker
 
             case 'textile':
                 return self::REDCLOTH;
-
-            case 'rdoc':
-                return self::RDOC;
 
             case 'org':
                 return self::ORG;

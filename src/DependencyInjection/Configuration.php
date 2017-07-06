@@ -36,6 +36,11 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end() // xdebug
                 ->scalarNode('autoload_path')->end()
+                ->arrayNode('coverage')->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('dir')->defaultValue('code-coverage')->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 

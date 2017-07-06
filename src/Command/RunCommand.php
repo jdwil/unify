@@ -23,6 +23,7 @@ use JDWil\Unify\Validation\Validator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
@@ -40,6 +41,12 @@ class RunCommand extends AbstractUnifyCommand
         $this
             ->setName('run')
             ->addArgument('file', InputArgument::OPTIONAL, 'File to test.')
+            ->addOption(
+                'coverage',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable code coverage generation. This will slow down your tests immensely.'
+            )
         ;
     }
 
@@ -57,7 +64,7 @@ class RunCommand extends AbstractUnifyCommand
             foreach ($parser->getTestPlans() as $testPlan) {
                 $testRunner->addTestPlan($testPlan);
             }
-            $testRunner->execute();
+            $testRunner->execute($input->getOption('coverage'));
 
             exit($testRunner->statusCode());
         } else {
@@ -75,7 +82,7 @@ class RunCommand extends AbstractUnifyCommand
                 }
             }
 
-            $testRunner->execute();
+            $testRunner->execute($input->getOption('coverage'));
         }
     }
 

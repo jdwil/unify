@@ -101,6 +101,7 @@ abstract class AbstractUnifyCommand extends Command implements ContainerAwareInt
         $this->parseConfig($input);
         $this->container->setParameter('xdebug.host', $this->config['xdebug']['host']);
         $this->container->setParameter('xdebug.port', $this->config['xdebug']['port']);
+        $this->container->setParameter('coverage.dir', $this->config['coverage']['dir']);
 
         // @todo revisit this. The paths here can get messed up when not running from the root dir.
         if (isset($this->config['autoload_path'])) {
@@ -118,7 +119,7 @@ abstract class AbstractUnifyCommand extends Command implements ContainerAwareInt
         while (!$filesystem->exists(sprintf('%s/vendor/autoload.php', $directory))) {
             echo "Not in " . sprintf("%s/composer.json\n", $directory);
             $directory = sprintf('%s/..', $directory);
-            if (realpath($directory) == '/') {
+            if (realpath($directory) === '/') {
                 $found = false;
                 break;
             }

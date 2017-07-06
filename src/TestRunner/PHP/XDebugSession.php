@@ -125,13 +125,28 @@ class XDebugSession extends AbstractSession
     private $processedFailures;
 
     /**
+     * @var bool
+     */
+    private $generateCodeCoverage;
+
+    /**
+     * @var array
+     */
+    private $coverageGathered;
+
+    /**
+     * @var array
+     */
+    private $coverage;
+
+    /**
      * DebugSession constructor.
      * @param string $host
      * @param int $port
      * @param OutputInterface $output
-     * @internal param bool $debugOutput
+     * @param bool $generateCodeCoverage
      */
-    public function __construct($host, $port, OutputInterface $output)
+    public function __construct($host, $port, OutputInterface $output, $generateCodeCoverage = false)
     {
         parent::__construct($output);
 
@@ -142,15 +157,26 @@ class XDebugSession extends AbstractSession
         $this->iterations = [];
         $this->processedAssertions = [];
         $this->processedFailures = [];
+        $this->coverageGathered = [];
+        $this->coverage = [];
+        $this->generateCodeCoverage = $generateCodeCoverage;
 
         $this->setContext(self::INITIALIZE);
 
         $this->initializationCommands = [
             "feature_set -i %d -n show_hidden -v 1\0",
             "feature_set -i %d -n max_children -v 100\0",
+            "feature_set -i %d -n max_data -v 100000\0",
             "stdout -i %d -c 2\0",
             "step_into -i %d\0",
         ];
+
+        if ($generateCodeCoverage) {
+            /* eval xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE); */
+            $this->initializationCommands[] =
+                'eval -i %d -- ' .
+                "eGRlYnVnX3N0YXJ0X2NvZGVfY292ZXJhZ2UoWERFQlVHX0NDX1VOVVNFRCB8IFhERUJVR19DQ19ERUFEX0NPREUpOw==\0";
+        }
     }
 
     /**
@@ -177,7 +203,7 @@ class XDebugSession extends AbstractSession
                 $responses = $this->parseResponse($data);
 
                 foreach ($responses as $xml) {
-                    if ($this->output->isDebug()) {
+                    if ($this->output->isDebug() && strlen($xml) < 2048) {
                         $this->output->writeln($xml);
                     }
                     $document = new \DOMDocument();
@@ -190,6 +216,12 @@ class XDebugSession extends AbstractSession
                         $this->debugOutput('STDOUT:');
                         $this->debugOutput($output);
                         $this->testPlan->appendOutput($output);
+                    } else if ($this->context() === self::COVERAGE) {
+                        $php = $document->documentElement->firstChild->nodeValue;
+                        $php = base64_decode($php);
+                        $this->coverage = eval(sprintf("return $php;"));
+                        $this->popContext();
+                        $this->debug($this->lastRunningResponse, $connection);
                     } else {
                         $this->lastResponse = $xml;
                         $this->debug($document->documentElement, $connection);
@@ -207,6 +239,14 @@ class XDebugSession extends AbstractSession
         $this->loop->run();
 
         return $this->assertions;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCoverage()
+    {
+        return $this->coverage;
     }
 
     /**
@@ -247,6 +287,19 @@ class XDebugSession extends AbstractSession
             $line = (int) $response->firstChild->getAttribute('lineno');
             $this->bumpIterationCount($line);
             $this->debugOutput(sprintf('  Broke on line %d', $line));
+
+            if ($this->generateCodeCoverage &&
+                !isset($this->coverageGathered[$line]) &&
+                in_array($this->context(), [self::RUNNING, self::CONTINUING], true)
+            ) {
+                $this->removeIteration($line);
+                $this->lastRunningResponse = $response;
+                /* eval var_export(xdebug_get_code_coverage(), true) */
+                $this->send($connection, "eval -i %d -- dmFyX2V4cG9ydCh4ZGVidWdfZ2V0X2NvZGVfY292ZXJhZ2UoKSwgdHJ1ZSk7\0");
+                $this->pushContext(self::COVERAGE);
+                $this->coverageGathered[$line] = true;
+                return;
+            }
         }
 
         if ($this->context() === self::CONTINUING) {
@@ -544,6 +597,14 @@ class XDebugSession extends AbstractSession
     }
 
     /**
+     * @param $line
+     */
+    private function removeIteration($line)
+    {
+        $this->iterations[$line]--;
+    }
+
+    /**
      * @param ConnectionInterface $connection
      * @param string|CommandInterface $command
      */
@@ -573,12 +634,18 @@ class XDebugSession extends AbstractSession
     {
         if (null === $testPlan->getSubject()) {
             $command = 'php';
+            if ($this->generateCodeCoverage) {
+                $command = sprintf('%s -d xdebug.coverage_enable=1', $command);
+            }
             $command = sprintf('%s -d xdebug.remote_host="%s"', $command, $this->host);
             $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
             $command = sprintf('%s %s &', $command, $testPlan->getFile());
         } else {
             $source = $testPlan->getSubject();
             $command = sprintf('echo %s | php', escapeshellarg($source));
+            if ($this->generateCodeCoverage) {
+                $command = sprintf('%s -d xdebug.coverage_enable=1', $command);
+            }
             $command = sprintf('%s -d xdebug.remote_host="%s"', $command, $this->host);
             $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
             $command = sprintf('%s &', $command);
@@ -600,7 +667,7 @@ class XDebugSession extends AbstractSession
                     throw $e;
                 }
                 $retry = true;
-                usleep(100);
+                usleep(1000);
             }
         } while ($retry);
     }

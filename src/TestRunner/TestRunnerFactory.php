@@ -25,12 +25,19 @@ class TestRunnerFactory
     private $debugSessionFactory;
 
     /**
+     * @var string
+     */
+    private $codeCoverage;
+
+    /**
      * TestRunnerFactory constructor.
      * @param XDebugSessionFactory $debugSessionFactory
+     * @param string $codeCoverage
      */
-    public function __construct(XDebugSessionFactory $debugSessionFactory)
+    public function __construct(XDebugSessionFactory $debugSessionFactory, $codeCoverage)
     {
         $this->debugSessionFactory = $debugSessionFactory;
+        $this->codeCoverage = $codeCoverage;
     }
 
     /**
@@ -39,6 +46,6 @@ class TestRunnerFactory
      */
     public function create(OutputInterface $output)
     {
-        return new TestRunner($this->debugSessionFactory, $output);
+        return new TestRunner($this->debugSessionFactory, $output, $this->codeCoverage);
     }
 }

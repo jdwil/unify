@@ -18,6 +18,11 @@ use JDWil\Unify\TestRunner\Shell\CommandTester;
 use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
 use JDWil\Unify\TestRunner\Unbounded\UnboundedTester;
 use JDWil\Unify\TestRunner\Unbounded\UnboundedTestPlan;
+use JDWil\Unify\ValueObject\CodeCoverage;
+use SebastianBergmann\CodeCoverage\Driver\Xdebug;
+use SebastianBergmann\CodeCoverage\Filter;
+use SebastianBergmann\CodeCoverage\Report\Clover;
+use SebastianBergmann\CodeCoverage\Report\Html\Facade;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -42,18 +47,28 @@ class TestRunner
     private $output;
 
     /**
+     * @var string
+     */
+    private $codeCoverage;
+
+    /**
      * TestRunner constructor.
      * @param XDebugSessionFactory $debugSessionFactory
      * @param OutputInterface $output
+     * @param string
      */
-    public function __construct(XDebugSessionFactory $debugSessionFactory, OutputInterface $output)
-    {
+    public function __construct(
+        XDebugSessionFactory $debugSessionFactory,
+        OutputInterface $output,
+        $codeCoverage
+    ) {
         $this->testPlans = [];
         $this->debugSessionFactory = $debugSessionFactory;
         $this->output = $output;
+        $this->codeCoverage = $codeCoverage;
     }
 
-    public function execute()
+    public function execute($generateCodeCoverage = false)
     {
         $showProgress = in_array(
             $this->output->getVerbosity(),
@@ -69,11 +84,17 @@ class TestRunner
             $progress->start();
         }
 
+        $codeCoverage = new CodeCoverage();
+
         foreach ($this->testPlans as $i => $testPlan) {
             if ($testPlan instanceof PHPTestPlan) {
                 $this->debug('  Executing PHP test plan');
-                $session = $this->debugSessionFactory->create($this->output);
+                $session = $this->debugSessionFactory->create($this->output, $generateCodeCoverage);
                 $session->execute($testPlan);
+
+                if ($generateCodeCoverage) {
+                    $codeCoverage->addCoverage($session->getCoverage());
+                }
             } else if ($testPlan instanceof ShellTestPlan) {
                 $this->debug('  Executing shell test plan');
                 $tester = new CommandTester($this->output);
@@ -95,6 +116,16 @@ class TestRunner
 
         $this->output->writeln('');
         $this->printResults();
+
+        if ($generateCodeCoverage) {
+            //print_r($codeCoverage->getCoverage());
+            $filter = new Filter();
+            $filter->addDirectoryToWhitelist('src');
+            $coverage = new \SebastianBergmann\CodeCoverage\CodeCoverage(new Xdebug(), $filter);
+            $coverage->append($codeCoverage->getCoverage(), 'Code Coverage');
+            $writer = new Facade();
+            $writer->process($coverage, 'code-coverage');
+        }
     }
 
     /**

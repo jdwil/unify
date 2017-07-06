@@ -50,8 +50,8 @@ class XDebugSessionFactory
      * @param OutputInterface $output
      * @return XDebugSession
      */
-    public function create(OutputInterface $output)
+    public function create(OutputInterface $output, $generateCodeCoverage = false)
     {
-        return new XDebugSession($this->xdebugHost, $this->xdebugPort, $output);
+        return new XDebugSession($this->xdebugHost, $this->xdebugPort, $output, $generateCodeCoverage);
     }
 }

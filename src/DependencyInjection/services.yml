@@ -2,6 +2,7 @@ parameters:
     xdebug.host: "127.0.0.1"
     xdebug.port: 9000
     autoload_path: ~
+    coverage.dir: "code-coverage"
 
 services:
 
@@ -157,3 +158,4 @@ services:
         class: JDWil\Unify\TestRunner\TestRunnerFactory
         arguments:
             - "@debug_session_factory"
+            - "%coverage.dir%"

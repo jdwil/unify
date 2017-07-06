@@ -32,6 +32,7 @@ abstract class AbstractSession implements SessionInterface
     const POSTMORTEM = 3;
     const STOPPED = 4;
     const CONTINUING = 5;
+    const COVERAGE = 6;
 
     /**
      * @var OutputInterface
