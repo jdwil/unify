@@ -632,7 +632,9 @@ class XDebugSession extends AbstractSession
      */
     private function buildRunCommand(PHPTestPlan $testPlan)
     {
-        if (null === $testPlan->getSubject()) {
+        $source = $testPlan->getSubject();
+
+        if (empty($source)) {
             $command = 'php';
             if ($this->generateCodeCoverage) {
                 $command = sprintf('%s -d xdebug.coverage_enable=1', $command);
@@ -641,7 +643,6 @@ class XDebugSession extends AbstractSession
             $command = sprintf('%s -d xdebug.remote_port=%d', $command, $this->port);
             $command = sprintf('%s %s &', $command, $testPlan->getFile());
         } else {
-            $source = $testPlan->getSubject();
             $command = sprintf('echo %s | php', escapeshellarg($source));
             if ($this->generateCodeCoverage) {
                 $command = sprintf('%s -d xdebug.coverage_enable=1', $command);

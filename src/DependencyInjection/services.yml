@@ -53,7 +53,7 @@ services:
         factory: "lexer_factory:createLexer"
         arguments:
             - "@=service('unify_lexer_definition').create()"
-            - "i"
+            - "is"
 
     unify_lexer_definition:
         class: JDWil\Unify\Lexer\UnifyLexerDefinition

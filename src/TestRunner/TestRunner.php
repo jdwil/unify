@@ -11,7 +11,6 @@
 
 namespace JDWil\Unify\TestRunner;
 
-use JDWil\Unify\Assertion\Unbounded\UnboundedAssertionQueue;
 use JDWil\Unify\TestRunner\PHP\XDebugSessionFactory;
 use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
 use JDWil\Unify\TestRunner\Shell\CommandTester;
@@ -21,7 +20,6 @@ use JDWil\Unify\TestRunner\Unbounded\UnboundedTestPlan;
 use JDWil\Unify\ValueObject\CodeCoverage;
 use SebastianBergmann\CodeCoverage\Driver\Xdebug;
 use SebastianBergmann\CodeCoverage\Filter;
-use SebastianBergmann\CodeCoverage\Report\Clover;
 use SebastianBergmann\CodeCoverage\Report\Html\Facade;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -118,13 +116,7 @@ class TestRunner
         $this->printResults();
 
         if ($generateCodeCoverage) {
-            //print_r($codeCoverage->getCoverage());
-            $filter = new Filter();
-            $filter->addDirectoryToWhitelist('src');
-            $coverage = new \SebastianBergmann\CodeCoverage\CodeCoverage(new Xdebug(), $filter);
-            $coverage->append($codeCoverage->getCoverage(), 'Code Coverage');
-            $writer = new Facade();
-            $writer->process($coverage, 'code-coverage');
+            $this->generateCodeCoverageReport($codeCoverage);
         }
     }
 
@@ -204,5 +196,24 @@ class TestRunner
         if ($this->output->isDebug()) {
             $this->output->writeln(sprintf('<info>%s</info>', $message));
         }
+    }
+
+    /**
+     * @param $codeCoverage
+     * @throws \SebastianBergmann\CodeCoverage\RuntimeException
+     */
+    private function generateCodeCoverageReport(CodeCoverage $codeCoverage)
+    {
+        if (getenv('UNIFY_COVERAGE')) {
+            $codeCoverage->addCoverage(xdebug_get_code_coverage());
+            xdebug_stop_code_coverage();
+        }
+
+        $filter = new Filter();
+        $filter->addDirectoryToWhitelist('src');
+        $coverage = new \SebastianBergmann\CodeCoverage\CodeCoverage(new Xdebug(), $filter);
+        $coverage->append($codeCoverage->getCoverage(), 'Code Coverage');
+        $writer = new Facade();
+        $writer->process($coverage, 'code-coverage');
     }
 }

@@ -1,6 +1,10 @@
 #!/usr/bin/env php
 <?php
 
+if (getenv('UNIFY_COVERAGE')) {
+    xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
+}
+
 use Symfony\Component\Console\Application;
 use JDWil\Unify\Command\RunCommand;
 use JDWil\Unify\DependencyInjection\ContainerFactory;

@@ -96,20 +96,3 @@ Example: Code blocks in Unify markdown.
         raw text
     ```
 ```
-
-Example of tokenizing a PHP code block:
-
-```php
-<?php
-
-$tick = '%60';
-$markdown = <<<CODE
-{$tick}{$tick}{$tick}php
-<?php
-
-\$x = 1;
-{$tick}{$tick}{$tick}
-CODE;
-
-$tokens = $lexer->lex(urldecode($markdown));
-```

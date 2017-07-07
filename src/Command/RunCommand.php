@@ -60,7 +60,7 @@ class RunCommand extends AbstractUnifyCommand
         if ($file = $input->getArgument('file')) {
             $file = realpath($file);
             $parser = $factory->createParser($file);
-            $parser->parse($file);
+            $parser->parse();
             foreach ($parser->getTestPlans() as $testPlan) {
                 $testRunner->addTestPlan($testPlan);
             }

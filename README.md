@@ -39,7 +39,7 @@ The full developer documentation can be found
     1. Proc returns value on user-defined condition.
 1. Support for phpdbg as an alternative to xdebug.
 1. Implement patchwork as a user-land fallback when runkit is not installed.
-1. Code Coverage support
+1. ~~Code Coverage support~~
 1. Need adopters and contributors
 1. Add support for other Github-supported markups. Options (what are people using for PHP?):
     1. RedCloth (.textile)

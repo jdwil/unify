@@ -67,7 +67,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
     const DOUBLE_QUOTED_STRING = '"[^"\\\\${]*(?:(?:\\\\.|\$(?!\{|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)|\{(?!\$))[^"\\\\${]*)*"';
     const INTEGER = '[0-9]+';
     const FLOAT = '[0-9]*\.[0-9]+';
-    const TYPE_ARRAY = '(\[|array\().*(\]|\))';
+    const TYPE_ARRAY = '(\[|array\()((?>[^()\[\]]*)|(?R))*(\]|\))';
     const CONSTANT = '[a-zA-Z_]\w*\b';
     const QUOTED_FILE_PATH = '[\'"][^\'"]+[\'"]';
     const UNQUOTED_FILE_PATH = '\.?\.?\/[^\s,;]+';
@@ -163,6 +163,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                     return UT_FILE_NOT_EXISTS;
                 },
 
+                self::CONSTANT => UT_CONSTANT,
                 self::COMMENT => UT_COMMENT
             ],
 
