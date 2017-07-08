@@ -8,8 +8,8 @@ it's roots," so to say.
 ## Table of Contents
 
 1. [Quick Start (this document)](#overview)
-2. [Assertions](assertions.md)
-3. [Internals](../internals/internals.md)
+1. [Assertions](assertions.md)
+1. [Test Doubles](unit-testing/test-doubles.md)
   
 <a name="overview"/>
 
@@ -22,6 +22,7 @@ It only takes a moment to install and set up Unify, so let's get cracking!
 To install Unify with composer, run:
 
 [unify]: # (skip)
+
 ```shell
 composer require jdwil/unify
 ```
@@ -59,7 +60,7 @@ try to interpret it. This example is intentionally simple. "$" denotes the start
 of a command, which Unify will execute. The remaining lines are the expected output
 of the command. In this case, nothing, since we ran with the quiet flag.
 
-The following would work as well:
+The following is also a valid, passing test:
 
 ```shell
 $ ./bin/unify --help
@@ -106,7 +107,7 @@ function foo($a) {
 }
 ```
 
-Here we set $x to the result of foo(2), which we rightly expect to be 2 as described
+Here we set $x to the result of foo(1), which we rightly expect to be 2 as described
 in the comment. Now when we run Unify it will execute the above code and assert
 that $x does indeed equal 2.
 
@@ -152,8 +153,8 @@ function foo($a) {
 
 This is the real power of Unify. Just by typing the example above, to help you understand
 how Unify works, I've tested part of Unify itself. Every time I run my Unify test
-suite, it will execute the above block and validate all my assertions and, in a
-roundabout way, test that my documentation is correct too!
+suite, it will execute the above block and validate all my assertions, assuring my source
+code is behaving correctly and that my documentation is correct too!
 
 Here's what it looks like when I run this entire file:
 
