@@ -117,7 +117,6 @@ abstract class AbstractUnifyCommand extends Command implements ContainerAwareInt
         $filesystem = $this->getContainer()->get('filesystem');
         $directory = __DIR__ .'/../..';
         while (!$filesystem->exists(sprintf('%s/vendor/autoload.php', $directory))) {
-            echo "Not in " . sprintf("%s/composer.json\n", $directory);
             $directory = sprintf('%s/..', $directory);
             if (realpath($directory) === '/') {
                 $found = false;

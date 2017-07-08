@@ -101,7 +101,7 @@ class PHPParser
      */
     public function parse($code = null)
     {
-        if (null === $code) {
+        if (null === $code || file_exists($code)) {
             // @todo use finder
             $this->lines = file($this->context->getFile());
             array_unshift($this->lines, '');

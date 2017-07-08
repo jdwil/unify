@@ -9,8 +9,9 @@ use Symfony\Component\Console\Application;
 use JDWil\Unify\Command\RunCommand;
 use JDWil\Unify\DependencyInjection\ContainerFactory;
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
+if (is_file($autoload = getcwd() . '/vendor/autoload.php')) {
+    require $autoload;
+}
 $container = ContainerFactory::buildContainer();
 
 $application = new Application();
