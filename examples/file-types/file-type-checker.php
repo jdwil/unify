@@ -32,4 +32,4 @@ for ($i = 0; $i <= 4; $i++) {
 $filesystem->remove('/tmp/test.php');
 
 // Avoid false-positive on last assertion with exit()
-//exit(0);
+exit(0);

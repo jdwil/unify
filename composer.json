@@ -16,7 +16,7 @@
     "require": {
         "ext-xdebug": "^2.0",
         "nikic/phlexy": "^0.1.0",
-        "react/child-process": "dev-master",
+        "react/child-process": "^0.5",
         "react/socket": "^0.8.0",
         "symfony/config": "^3.3",
         "symfony/console": "^3.3",
