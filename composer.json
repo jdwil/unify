@@ -26,5 +26,6 @@
         "symfony/process": "^3.3",
         "symfony/yaml": "^3.3",
         "phpunit/php-code-coverage": "^5.2"
-    }
+    },
+    "bin": ["bin/unify"]
 }
