@@ -123,6 +123,66 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             return UT_FILE_PATH;
         };
 
+        $inVariable = [
+
+            // Internal types
+            self::WHITESPACE => UT_WHITESPACE,
+            self::INLINE_COMMENT => UT_COMMENT,
+            self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
+            self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
+            self::FLOAT => UT_FLOAT,
+            self::INTEGER => UT_INTEGER,
+            self::TYPE_ARRAY => UT_ARRAY,
+
+            'is empty' => UT_EMPTY,
+            'is not empty' => UT_NOT_EMPTY,
+
+            // Arrays
+            'has key' => UT_ARRAY_CONTAINS_KEY,
+            'is set' => UT_ARRAY_CONTAINS_KEY,
+            'contains only' => UT_CONTAINS_ONLY,
+
+            // Objects
+            'has property' => UT_OBJECT_HAS_PROPERTY,
+            'doesn?\'?t?( not)? have property' => UT_OBJECT_NOT_HAS_PROPERTY,
+
+            // Inequality
+            '\!==' => UT_NOT_EQUALS_MATCH_TYPE,
+            '\!=' => UT_NOT_EQUALS,
+            'is not' => UT_NOT_EQUALS,
+            'doesn?\'?t?( not)? equal' => UT_NOT_EQUALS,
+            'no longer equals' => UT_NOT_EQUALS,
+
+            // Equality
+            '===' => UT_EQUALS_MATCH_TYPE,
+            '==?' => UT_EQUALS,
+            '>' => UT_GREATER_THAN,
+            'is greater than or equal to' => UT_GREATER_THAN_OR_EQUAL,
+            'is greater than' => UT_GREATER_THAN,
+            '>=' => UT_GREATER_THAN_OR_EQUAL,
+            '<' => UT_LESS_THAN,
+            'is less than or equal to' => UT_LESS_THAN_OR_EQUAL,
+            'is less than' => UT_LESS_THAN,
+            '<=' => UT_LESS_THAN_OR_EQUAL,
+            'is equal to' => UT_EQUALS,
+            'is' => UT_EQUALS,
+            'now equals' => UT_EQUALS,
+            'equals' => UT_EQUALS,
+
+            // Arrays
+            'contains|has' => function (Stateful $lexer) {
+                $lexer->swapState('ARRAY_CONTAINS');
+
+                return UT_ARRAY_CONTAINS;
+            },
+
+            // Misc
+            self::ITERATIONS => $iterations,
+            ',' => UT_MORE,
+            self::END_STATEMENT => $endAssertion,
+            self::CONSTANT => UT_CONSTANT,
+        ];
+
         return [
             'INITIAL' => [
                 self::WHITESPACE => UT_WHITESPACE,
@@ -164,71 +224,18 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 },
 
                 self::CONSTANT => UT_CONSTANT,
-                self::COMMENT => UT_COMMENT
-            ],
+                self::COMMENT => UT_COMMENT,
 
-            'FUNCTION_CALL' => $procedureCall,
-            'METHOD_CALL' => $procedureCall,
-
-            'IN_VARIABLE' => [
-
-                // Internal types
-                self::WHITESPACE => UT_WHITESPACE,
-                self::INLINE_COMMENT => UT_COMMENT,
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::FLOAT => UT_FLOAT,
                 self::INTEGER => UT_INTEGER,
                 self::TYPE_ARRAY => UT_ARRAY,
+            ] + $inVariable,
 
-                'is empty' => UT_EMPTY,
-                'is not empty' => UT_NOT_EMPTY,
-
-                // Arrays
-                'has key' => UT_ARRAY_CONTAINS_KEY,
-                'is set' => UT_ARRAY_CONTAINS_KEY,
-                'contains only' => UT_CONTAINS_ONLY,
-
-                // Objects
-                'has property' => UT_OBJECT_HAS_PROPERTY,
-                'doesn?\'?t?( not)? have property' => UT_OBJECT_NOT_HAS_PROPERTY,
-
-                // Inequality
-                '\!==' => UT_NOT_EQUALS_MATCH_TYPE,
-                '\!=' => UT_NOT_EQUALS,
-                'is not' => UT_NOT_EQUALS,
-                'doesn?\'?t?( not)? equal' => UT_NOT_EQUALS,
-                'no longer equals' => UT_NOT_EQUALS,
-
-                // Equality
-                '===' => UT_EQUALS_MATCH_TYPE,
-                '==?' => UT_EQUALS,
-                '>' => UT_GREATER_THAN,
-                'is greater than or equal to' => UT_GREATER_THAN_OR_EQUAL,
-                'is greater than' => UT_GREATER_THAN,
-                '>=' => UT_GREATER_THAN_OR_EQUAL,
-                '<' => UT_LESS_THAN,
-                'is less than or equal to' => UT_LESS_THAN_OR_EQUAL,
-                'is less than' => UT_LESS_THAN,
-                '<=' => UT_LESS_THAN_OR_EQUAL,
-                'is equal to' => UT_EQUALS,
-                'is' => UT_EQUALS,
-                'now equals' => UT_EQUALS,
-                'equals' => UT_EQUALS,
-
-                // Arrays
-                'contains|has' => function (Stateful $lexer) {
-                    $lexer->swapState('ARRAY_CONTAINS');
-
-                    return UT_ARRAY_CONTAINS;
-                },
-
-                // Misc
-                self::ITERATIONS => $iterations,
-                ',' => UT_MORE,
-                self::END_STATEMENT => $endAssertion,
-                self::CONSTANT => UT_CONSTANT,
-            ],
+            'FUNCTION_CALL' => $procedureCall,
+            'METHOD_CALL' => $procedureCall,
+            'IN_VARIABLE' => $inVariable,
 
             'PROPERTY_REFERENCE' => [
                 self::WHITESPACE => UT_WHITESPACE,
@@ -268,6 +275,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::FLOAT => UT_FLOAT,
                 self::INTEGER => UT_INTEGER,
                 self::TYPE_ARRAY => UT_ARRAY,
+                self::VARIABLE => UT_VARIABLE,
 
                 'items?|elements?|values?' => UT_DESCRIPTOR,
 

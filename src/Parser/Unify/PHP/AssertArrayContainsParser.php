@@ -38,7 +38,11 @@ class AssertArrayContainsParser extends AbstractPHPParser
         while ($token = $this->next()) {
             switch ($token[self::TYPE]) {
                 case UT_VARIABLE:
-                    $variable = $token[self::VALUE];
+                    if (null !== $variable) {
+                        $value = $token[self::VALUE];
+                    } else {
+                        $variable = $token[self::VALUE];
+                    }
                     break;
 
                 case UT_ARRAY:
