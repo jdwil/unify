@@ -47,7 +47,7 @@ class AssertEmptyParser extends AbstractPhpParser
         }
 
         if (null === $subject) {
-            return false;
+            $subject = $this->context->getCodeContext();
         }
 
         $ret = [];

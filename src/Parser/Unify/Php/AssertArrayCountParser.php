@@ -50,7 +50,11 @@ class AssertArrayCountParser extends AbstractPhpParser
             }
         }
 
-        if (null === $variable || null === $count) {
+        if (null === $variable) {
+            $variable = $this->context->getCodeContext();
+        }
+
+        if (null === $count) {
             return false;
         }
 

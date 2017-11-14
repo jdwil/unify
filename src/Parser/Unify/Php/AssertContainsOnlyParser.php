@@ -48,7 +48,11 @@ class AssertContainsOnlyParser extends AbstractPhpParser
             }
         }
 
-        if (null === $subject || null === $type) {
+        if (null === $subject) {
+            $subject = $this->context->getCodeContext();
+        }
+
+        if (null === $type) {
             return false;
         }
 

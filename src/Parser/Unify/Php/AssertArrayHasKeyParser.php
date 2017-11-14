@@ -47,6 +47,10 @@ class AssertArrayHasKeyParser extends AbstractPhpParser
             }
         }
 
+        if (null === $variable) {
+            $variable = $this->context->getCodeContext();
+        }
+
         if ($iterations = $this->getIterations()) {
             $ret = [];
             foreach ($iterations as $iteration) {

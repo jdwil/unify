@@ -55,8 +55,13 @@ class AssertArrayContainsParser extends AbstractPhpParser
             }
         }
 
-        if (null === $variable || null === $value) {
-            return false;
+        if (null === $value && null !== $variable) {
+            $value = $variable;
+            $variable = null;
+        }
+
+        if (null === $variable) {
+            $variable = $this->context->getCodeContext();
         }
 
         $ret = [];

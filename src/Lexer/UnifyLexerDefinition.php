@@ -58,6 +58,8 @@ define('UT_IS_NOT_WRITABLE', 141);
 
 /**
  * Class UnifyLexerDefinition
+ *
+ * @todo check the file path stuff. We should probably remove quoted file paths entirely and use quoted strings instead.
  */
 class UnifyLexerDefinition implements LexerDefinitionInterface
 {
@@ -69,7 +71,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
     const FLOAT = '[0-9]*\.[0-9]+';
     const TYPE_ARRAY = '(\[|array\()((?>[^()\[\]]*)|(?R))*(\]|\))';
     const CONSTANT = '[a-zA-Z_]\w*\b';
-    const QUOTED_FILE_PATH = '[\'"][^\'"]+[\'"]';
+    //const QUOTED_FILE_PATH = '[\'"][^\'"]+[\'"]';
     const UNQUOTED_FILE_PATH = '\.?\.?\/[^\s,;]+';
     const INLINE_COMMENT = '\([^\)]*\)';
     const COMMENT = '(.*)?[:;\.]';
@@ -209,7 +211,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
 
                     return UT_FUNCTION_CALL;
                 },
-                self::QUOTED_FILE_PATH => $filePath,
+                //self::QUOTED_FILE_PATH => $filePath,
                 self::UNQUOTED_FILE_PATH => $filePath,
 
                 'creates?( files?)?' => function (Stateful $lexer) {
@@ -224,8 +226,6 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                     return UT_FILE_NOT_EXISTS;
                 },
 
-                self::COMMENT => UT_COMMENT,
-
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::DOUBLE_QUOTED_STRING => UT_QUOTED_STRING,
                 self::FLOAT => UT_FLOAT,
@@ -234,6 +234,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             ] + $inVariable +
                 [
                     self::CONSTANT => UT_CONSTANT,
+                    self::COMMENT => UT_COMMENT,
                 ],
 
             'FUNCTION_CALL' => $procedureCall,
@@ -257,7 +258,9 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             'IN_FILE' => [
                 self::WHITESPACE => UT_WHITESPACE,
                 self::INLINE_COMMENT => UT_COMMENT,
-                self::QUOTED_FILE_PATH => UT_FILE_PATH,
+                self::SINGLE_QUOTED_STRING => UT_FILE_PATH,
+                self::DOUBLE_QUOTED_STRING => UT_FILE_PATH,
+                //self::QUOTED_FILE_PATH => UT_FILE_PATH,
                 self::UNQUOTED_FILE_PATH => UT_FILE_PATH,
                 ',' => UT_MORE,
                 self::END_STATEMENT => $endAssertion
