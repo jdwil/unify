@@ -15,9 +15,10 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\TestRunner\Php;
 
-/**
- * Class ConfigurationException
- */
-class ConfigurationException extends UnifyException {}
+use JDWil\Unify\TestRunner\TestPlanInterface;
+
+interface SessionInterface
+{
+}

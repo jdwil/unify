@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace JDWil\Unify\Command;
 
-use JDWil\Unify\TestRunner\PHP\XDebugSession;
+use JDWil\Unify\TestRunner\Php\XDebugSession;
 use JDWil\Unify\Parser\FileTypeChecker;
 use JDWil\Unify\Parser\ParserFactory;
 use JDWil\Unify\TestRunner\TestPlan;

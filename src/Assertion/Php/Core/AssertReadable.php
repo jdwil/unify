@@ -15,9 +15,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Assertion\Php\Core;
+
+use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\TestRunner\Command\Debugger\Path;
 
 /**
- * Class ConfigurationException
+ * Class AssertReadable
  */
-class ConfigurationException extends UnifyException {}
+class AssertReadable extends AbstractFilesystemAssertion
+{
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Assert %s is readable', $this->path);
+    }
+
+    /**
+     * @return CommandInterface[]
+     */
+    public function getDebuggerCommands()
+    {
+        return [
+            Path::at($this->path)->isReadable()
+        ];
+    }
+}

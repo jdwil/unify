@@ -15,9 +15,30 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\Php\Core\AssertNotExists;
 
 /**
- * Class ConfigurationException
+ * Class AssertFileNotExistsParser
  */
-class ConfigurationException extends UnifyException {}
+class AssertNotExistsParser extends AssertExistsParser
+{
+    /**
+     * @return array
+     */
+    protected function getValidTokens()
+    {
+        return [UT_FILE_NOT_EXISTS];
+    }
+
+    /**
+     * @param string $file
+     * @param int $iteration
+     * @return AssertNotExists
+     */
+    protected function newAssertion($file, $iteration = 0)
+    {
+        return new AssertNotExists($file, $iteration);
+    }
+}

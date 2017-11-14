@@ -15,9 +15,44 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\Php\Core\AssertReadable;
 
 /**
- * Class ConfigurationException
+ * Class AssertReadableParser
  */
-class ConfigurationException extends UnifyException {}
+class AssertReadableParser extends AbstractPhpParser
+{
+    /**
+     * @return false|AssertionInterface[]
+     */
+    public function parse()
+    {
+        if (!$this->containsToken([UT_IS_READABLE])) {
+            return false;
+        }
+
+        $path = null;
+
+        while ($token = $this->next()) {
+            switch ($token[self::TYPE]) {
+                case UT_FILE_PATH:
+                    $path = $token[self::VALUE];
+                    break;
+            }
+        }
+
+        if (null === $path) {
+            return false;
+        }
+
+        $ret = [];
+        foreach ($this->getIterations() as $iteration) {
+            $ret[] = new AssertReadable($path, $iteration);
+        }
+
+        return $ret;
+    }
+}

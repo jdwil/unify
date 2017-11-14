@@ -15,9 +15,41 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Assertion\Php\Core;
+
+use JDWil\Unify\Assertion\Php\AbstractPhpAssertion;
 
 /**
- * Class ConfigurationException
+ * Class AbstractComparisonAssertion
  */
-class ConfigurationException extends UnifyException {}
+abstract class AbstractComparisonAssertion extends AbstractPhpAssertion
+{
+    /**
+     * @var string
+     */
+    protected $variable;
+
+    /**
+     * @var mixed
+     */
+    protected $value;
+
+    /**
+     * @var mixed
+     */
+    protected $actualValue;
+
+    /**
+     * AssertEqual constructor.
+     * @param string $variable
+     * @param mixed $value
+     * @param int $iteration
+     */
+    public function __construct($variable, $value, $iteration = 0)
+    {
+        $this->variable = $variable;
+        $this->value = $value;
+
+        parent::__construct($iteration);
+    }
+}

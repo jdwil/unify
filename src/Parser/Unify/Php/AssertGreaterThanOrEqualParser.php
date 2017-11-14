@@ -15,9 +15,32 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\Php\Core\AssertGreaterThanOrEqual;
 
 /**
- * Class ConfigurationException
+ * Class AssertGreaterThanOrEqualParser
  */
-class ConfigurationException extends UnifyException {}
+class AssertGreaterThanOrEqualParser extends AbstractComparisonParser
+{
+    /**
+     * @return array
+     */
+    protected function getValidTokens()
+    {
+        return [UT_GREATER_THAN_OR_EQUAL];
+    }
+
+    /**
+     * @param string $variable
+     * @param string $value
+     * @param int $iteration
+     * @return AssertionInterface
+     */
+    protected function newAssertion($variable, $value, $iteration = 0)
+    {
+        return new AssertGreaterThanOrEqual($variable, $value, $iteration);
+    }
+}

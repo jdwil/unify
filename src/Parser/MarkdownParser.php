@@ -13,7 +13,7 @@ namespace JDWil\Unify\Parser;
 
 use JDWil\Unify\Assertion\Unbounded\Core\AssertStdoutEquals;
 use JDWil\Unify\Assertion\Unbounded\UnboundedAssertionQueue;
-use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
+use JDWil\Unify\TestRunner\Php\PhpTestPlan;
 use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
 use JDWil\Unify\TestRunner\TestPlanInterface;
 use JDWil\Unify\TestRunner\Unbounded\UnboundedTestPlan;
@@ -148,7 +148,7 @@ class MarkdownParser
         $codeBlock = $this->fixCodeBlock($codeBlock);
         $parser = $this->parserFactory->createPhpParser($this->file);
         $parser->parse($codeBlock);
-        $this->testPlans[] = new PHPTestPlan(
+        $this->testPlans[] = new PhpTestPlan(
             $this->file,
             $codeBlock,
             $parser->getAssertions(),

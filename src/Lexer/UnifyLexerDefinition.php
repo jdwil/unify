@@ -133,6 +133,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             self::FLOAT => UT_FLOAT,
             self::INTEGER => UT_INTEGER,
             self::TYPE_ARRAY => UT_ARRAY,
+            self::VARIABLE => UT_VARIABLE,
 
             'is empty' => UT_EMPTY,
             'is not empty' => UT_NOT_EMPTY,
@@ -156,14 +157,14 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             // Equality
             '===' => UT_EQUALS_MATCH_TYPE,
             '==?' => UT_EQUALS,
-            '>' => UT_GREATER_THAN,
             'is greater than or equal to' => UT_GREATER_THAN_OR_EQUAL,
             'is greater than' => UT_GREATER_THAN,
             '>=' => UT_GREATER_THAN_OR_EQUAL,
-            '<' => UT_LESS_THAN,
+            '>' => UT_GREATER_THAN,
             'is less than or equal to' => UT_LESS_THAN_OR_EQUAL,
             'is less than' => UT_LESS_THAN,
             '<=' => UT_LESS_THAN_OR_EQUAL,
+            '<' => UT_LESS_THAN,
             'is equal to' => UT_EQUALS,
             'is' => UT_EQUALS,
             'now equals' => UT_EQUALS,
@@ -223,7 +224,6 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                     return UT_FILE_NOT_EXISTS;
                 },
 
-                self::CONSTANT => UT_CONSTANT,
                 self::COMMENT => UT_COMMENT,
 
                 self::SINGLE_QUOTED_STRING => UT_QUOTED_STRING,
@@ -231,7 +231,10 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
                 self::FLOAT => UT_FLOAT,
                 self::INTEGER => UT_INTEGER,
                 self::TYPE_ARRAY => UT_ARRAY,
-            ] + $inVariable,
+            ] + $inVariable +
+                [
+                    self::CONSTANT => UT_CONSTANT,
+                ],
 
             'FUNCTION_CALL' => $procedureCall,
             'METHOD_CALL' => $procedureCall,

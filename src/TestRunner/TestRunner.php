@@ -11,8 +11,8 @@
 
 namespace JDWil\Unify\TestRunner;
 
-use JDWil\Unify\TestRunner\PHP\XDebugSessionFactory;
-use JDWil\Unify\TestRunner\PHP\PHPTestPlan;
+use JDWil\Unify\TestRunner\Php\XDebugSessionFactory;
+use JDWil\Unify\TestRunner\Php\PhpTestPlan;
 use JDWil\Unify\TestRunner\Shell\CommandTester;
 use JDWil\Unify\TestRunner\Shell\ShellTestPlan;
 use JDWil\Unify\TestRunner\Unbounded\UnboundedTester;
@@ -85,7 +85,7 @@ class TestRunner
         $codeCoverage = new CodeCoverage();
 
         foreach ($this->testPlans as $i => $testPlan) {
-            if ($testPlan instanceof PHPTestPlan) {
+            if ($testPlan instanceof PhpTestPlan) {
                 $this->debug('  Executing PHP test plan');
                 $session = $this->debugSessionFactory->create($this->output, $generateCodeCoverage);
                 $session->execute($testPlan);
@@ -169,7 +169,6 @@ class TestRunner
                 if ($assertion->isPass()) {
                     $passed++;
                 } else {
-                    $failed++;
                     $failures[] = [
                         'file' => sprintf('%s:%s', $assertion->getFile(), $assertion->getLine()),
                         'assertion' => (string) $assertion,

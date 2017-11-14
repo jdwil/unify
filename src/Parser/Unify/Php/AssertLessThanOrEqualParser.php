@@ -15,9 +15,33 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\Php\Core\AssertLessThanOrEqual;
 
 /**
- * Class ConfigurationException
+ * Class AssertLessThanOrEqualParser
  */
-class ConfigurationException extends UnifyException {}
+class AssertLessThanOrEqualParser extends AbstractComparisonParser
+{
+    /**
+     * @return array
+     */
+    protected function getValidTokens()
+    {
+        return [UT_LESS_THAN_OR_EQUAL];
+    }
+
+    /**
+     * @param string $variable
+     * @param string $value
+     * @param int $iteration
+     * @return AssertionInterface
+     */
+    protected function newAssertion($variable, $value, $iteration = 0)
+    {
+        return new AssertLessThanOrEqual($variable, $value, $iteration);
+    }
+}

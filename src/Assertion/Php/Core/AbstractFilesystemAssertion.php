@@ -15,9 +15,26 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Assertion\Php\Core;
 
-/**
- * Class ConfigurationException
- */
-class ConfigurationException extends UnifyException {}
+use JDWil\Unify\Assertion\Php\AbstractPhpAssertion;
+
+abstract class AbstractFilesystemAssertion extends AbstractPhpAssertion
+{
+    /**
+     * @var string
+     */
+    protected $path;
+
+    /**
+     * AssertFileExists constructor.
+     * @param string $filePath
+     * @param int $iteration
+     */
+    public function __construct($filePath, $iteration)
+    {
+        $this->path = $filePath;
+
+        parent::__construct($iteration);
+    }
+}

@@ -15,9 +15,44 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\Php\Core\AssertWritable;
 
 /**
- * Class ConfigurationException
+ * Class AssertWritableParser
  */
-class ConfigurationException extends UnifyException {}
+class AssertWritableParser extends AbstractPhpParser
+{
+    /**
+     * @return false|AssertionInterface[]
+     */
+    public function parse()
+    {
+        if (!$this->containsToken([UT_IS_WRITABLE])) {
+            return false;
+        }
+
+        $path = null;
+
+        while ($token = $this->next()) {
+            switch ($token[self::TYPE]) {
+                case UT_FILE_PATH:
+                    $path = $token[self::VALUE];
+                    break;
+            }
+        }
+
+        if (null === $path) {
+            return false;
+        }
+
+        $ret = [];
+        foreach ($this->getIterations() as $iteration) {
+            $ret[] = new AssertWritable($path, $iteration);
+        }
+
+        return $ret;
+    }
+}

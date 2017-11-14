@@ -11,4 +11,4 @@
 
 namespace JDWil\Unify\Exception;
 
-class XdebugException extends \Exception {}
+class XdebugException extends UnifyException {}

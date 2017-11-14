@@ -15,54 +15,56 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\TestRunner\Unbounded;
+namespace JDWil\Unify\Assertion\Php\Core;
 
-use JDWil\Unify\TestRunner\Command\CommandResponse;
-use JDWil\Unify\TestRunner\Php\PhpTestPlan;
-use JDWil\Unify\TestRunner\TestPlanInterface;
+use JDWil\Unify\Assertion\Php\AbstractPhpAssertion;
+use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 
 /**
- * Class UnboundedTester
+ * Class AssertArrayCount
  */
-class UnboundedTester
+class AssertArrayCount extends AbstractPhpAssertion
 {
     /**
-     * @var TestPlanInterface[]
+     * @var string
      */
-    private $testPlans;
+    private $variable;
 
     /**
      * @var int
      */
-    private $index;
+    private $count;
 
     /**
-     * UnboundedTester constructor.
-     * @param TestPlanInterface[] $testPlans
-     * @param int $index
+     * AssertArrayCount constructor.
+     * @param string $variable
+     * @param int $count
+     * @param int $iteration
      */
-    public function __construct($testPlans, $index)
+    public function __construct($variable, $count, $iteration = 0)
     {
-        $this->testPlans = $testPlans;
-        $this->index = $index;
+        parent::__construct($iteration);
+
+        $this->variable = $variable;
+        $this->count = $count;
     }
 
     /**
-     * @param UnboundedTestPlan $testPlan
+     * @return string
      */
-    public function test(UnboundedTestPlan $testPlan)
+    public function __toString()
     {
-        $lastTestPlan = $this->testPlans[$this->index - 1];
-        if ($lastTestPlan instanceof PhpTestPlan) {
-            $stdout = $lastTestPlan->getOutput();
-        } else {
-            return;
-        }
+        return sprintf('Assert %s contains %d elements.', $this->variable, $this->count);
+    }
 
-        foreach ($testPlan->getAssertions() as $assertion) {
-            $assertion->assert(
-                new CommandResponse($stdout)
-            );
-        }
+    /**
+     * @return CommandInterface[]
+     */
+    public function getDebuggerCommands()
+    {
+        return [
+            Subject::named(sprintf('count(%s)', $this->variable))->equals($this->count)
+        ];
     }
 }

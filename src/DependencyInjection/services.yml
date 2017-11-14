@@ -7,7 +7,7 @@ parameters:
 services:
 
     debug_session_factory:
-        class: JDWil\Unify\TestRunner\PHP\XDebugSessionFactory
+        class: JDWil\Unify\TestRunner\Php\XDebugSessionFactory
         arguments:
             - "%xdebug.host%"
             - "%xdebug.port%"
@@ -66,7 +66,7 @@ services:
             - "@service_container"
 
     php_unify_pipeline:
-        class: JDWil\Unify\Parser\Unify\PHP\PHPUnifyParserPipeline
+        class: JDWil\Unify\Parser\Unify\Php\PhpUnifyParserPipeline
         arguments:
             -
                 - "@php_assert_contains_only"
@@ -92,67 +92,67 @@ services:
                 - "@php_redefine_procedure"
 
     php_assert_contains_only:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertContainsOnlyParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertContainsOnlyParser
 
     php_assert_array_contains:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertArrayContainsParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertArrayContainsParser
 
     php_assert_array_count:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertArrayCountParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertArrayCountParser
 
     php_assert_array_has_key:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertArrayHasKeyParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertArrayHasKeyParser
 
     php_assert_empty:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertEmptyParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertEmptyParser
 
     php_assert_not_empty:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertNotEmptyParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertNotEmptyParser
 
     php_assert_equal:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertEqualParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertEqualParser
 
     php_assert_not_equal:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertNotEqualParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertNotEqualParser
 
     php_assert_less_than:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertLessThanParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertLessThanParser
 
     php_assert_less_than_or_equal:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertLessThanOrEqualParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertLessThanOrEqualParser
 
     php_assert_greater_than:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertGreaterThanParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertGreaterThanParser
 
     php_assert_greater_than_or_equal:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertGreaterThanOrEqualParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertGreaterThanOrEqualParser
 
     php_assert_file_exists:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertExistsParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertExistsParser
 
     php_assert_file_not_exists:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertNotExistsParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertNotExistsParser
 
     php_assert_property_exists:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertPropertyExistsParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertPropertyExistsParser
 
     php_assert_property_not_exists:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertPropertyNotExistsParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertPropertyNotExistsParser
 
     php_assert_readable:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertReadableParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertReadableParser
 
     php_assert_not_readable:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertNotReadableParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertNotReadableParser
 
     php_assert_writable:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertWritableParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertWritableParser
 
     php_assert_not_writable:
-        class: JDWil\Unify\Parser\Unify\PHP\AssertNotWritableParser
+        class: JDWil\Unify\Parser\Unify\Php\AssertNotWritableParser
 
     php_redefine_procedure:
-        class: JDWil\Unify\Parser\Unify\PHP\RedefineProcedureParser
+        class: JDWil\Unify\Parser\Unify\Php\RedefineProcedureParser
 
     test_runner_factory:
         class: JDWil\Unify\TestRunner\TestRunnerFactory

@@ -15,9 +15,32 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Assertion\Php\Core;
+
+use JDWil\Unify\Assertion\Php\AbstractPhpAssertion;
+use JDWil\Unify\TestRunner\Command\Debugger\FileExists;
+use JDWil\Unify\TestRunner\Command\Debugger\Path;
 
 /**
- * Class ConfigurationException
+ * Class AssertExists
  */
-class ConfigurationException extends UnifyException {}
+class AssertExists extends AbstractFilesystemAssertion
+{
+    /**
+     * @return array
+     */
+    public function getDebuggerCommands()
+    {
+        return [
+            Path::at($this->path)->exists()
+        ];
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Assert "%s" exists.', $this->path);
+    }
+}

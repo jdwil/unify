@@ -18,6 +18,6 @@
 namespace JDWil\Unify\Exception;
 
 /**
- * Class ConfigurationException
+ * Class AssertionFailedException
  */
-class ConfigurationException extends UnifyException {}
+class AssertionFailedException extends UnifyException {}

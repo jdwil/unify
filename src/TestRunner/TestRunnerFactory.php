@@ -11,7 +11,7 @@
 
 namespace JDWil\Unify\TestRunner;
 
-use JDWil\Unify\TestRunner\PHP\XDebugSessionFactory;
+use JDWil\Unify\TestRunner\Php\XDebugSessionFactory;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**

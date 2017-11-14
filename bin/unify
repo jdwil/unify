@@ -7,6 +7,7 @@ if (getenv('UNIFY_COVERAGE')) {
 
 use Symfony\Component\Console\Application;
 use JDWil\Unify\Command\RunCommand;
+use JDWil\Unify\Command\DebugCommand;
 use JDWil\Unify\DependencyInjection\ContainerFactory;
 
 if (is_file($autoload = getcwd() . '/vendor/autoload.php')) {
@@ -19,5 +20,9 @@ $application = new Application();
 $runCommand = new RunCommand();
 $runCommand->setContainer($container);
 $application->add($runCommand);
+
+$debugCommand = new DebugCommand();
+$debugCommand->setContainer($container);
+$application->add($debugCommand);
 
 $application->run();

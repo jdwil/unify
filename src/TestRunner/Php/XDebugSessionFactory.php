@@ -15,9 +15,43 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\TestRunner\Php;
+
+use JDWil\Unify\TestRunner\Php\XDebugSession;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class ConfigurationException
+ * Class DebugSessionFactory
  */
-class ConfigurationException extends UnifyException {}
+class XDebugSessionFactory
+{
+    /**
+     * @var string
+     */
+    private $xdebugHost;
+
+    /**
+     * @var int
+     */
+    private $xdebugPort;
+
+    /**
+     * DebugSessionFactory constructor.
+     * @param string $xdebugHost
+     * @param int $xdebugPort
+     */
+    public function __construct($xdebugHost, $xdebugPort)
+    {
+        $this->xdebugHost = $xdebugHost;
+        $this->xdebugPort = $xdebugPort;
+    }
+
+    /**
+     * @param OutputInterface $output
+     * @return XDebugSession
+     */
+    public function create(OutputInterface $output, $generateCodeCoverage = false)
+    {
+        return new XDebugSession($this->xdebugHost, $this->xdebugPort, $output, $generateCodeCoverage);
+    }
+}

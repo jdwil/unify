@@ -217,16 +217,16 @@ class Subject extends AbstractCommand
     {
         switch ($this->comparisonType) {
             case self::CONTAINS:
-                return sprintf('in_array(%s, %s)', (string) $this->value, $this->subject);
+                return sprintf('in_array(%s, (%s))', (string) $this->value, $this->subject);
 
             case self::IS_EMPTY:
-                return sprintf('empty(%s)', $this->subject);
+                return sprintf('empty((%s))', $this->subject);
 
             case self::CONTAINS_ONLY:
-                return sprintf('%s === array_filter(%s, %s)', $this->subject, $this->subject, $this->buildFilterClosure());
+                return sprintf('(%s) === array_filter((%s), %s)', $this->subject, $this->subject, $this->buildFilterClosure());
 
             default:
-                return sprintf('%s %s %s', $this->subject, $this->comparisonType, (string) $this->value);
+                return sprintf('(%s) %s (%s)', $this->subject, $this->comparisonType, (string) $this->value);
         }
     }
 

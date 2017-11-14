@@ -15,9 +15,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Assertion\Php\Core;
+
+use JDWil\Unify\TestRunner\Command\CommandInterface;
+use JDWil\Unify\TestRunner\Command\Debugger\Subject;
 
 /**
- * Class ConfigurationException
+ * Class AssertLessThanOrEqual
  */
-class ConfigurationException extends UnifyException {}
+class AssertLessThanOrEqual extends AbstractComparisonAssertion
+{
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Assert %s is less than or equal to %s', $this->variable, (string) $this->value);
+    }
+
+    /**
+     * @return CommandInterface[]
+     */
+    public function getDebuggerCommands()
+    {
+        return [
+            Subject::named($this->variable)->isLessThanOrEqualTo($this->value)
+        ];
+    }
+}

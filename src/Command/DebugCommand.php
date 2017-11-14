@@ -15,9 +15,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+declare(strict_types=1);
 
-/**
- * Class ConfigurationException
- */
-class ConfigurationException extends UnifyException {}
+namespace JDWil\Unify\Command;
+
+use JDWil\Unify\TestRunner\Php\InteractiveXDebugSession;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class DebugCommand extends AbstractUnifyCommand
+{
+    protected function configure()
+    {
+        parent::configure();
+
+        $this
+            ->setName('debug')
+            ->addArgument('file', InputArgument::REQUIRED)
+        ;
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $helper = $this->getHelper('question');
+        $session = new InteractiveXDebugSession($output, $input, $helper, '127.0.0.1', 9000, $input->getArgument('file'));
+        $session->execute();
+    }
+}

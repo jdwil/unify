@@ -15,9 +15,37 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\Assertion\Php\Core\AssertEqual;
+use JDWil\Unify\Assertion\Php\Core\AssertStrictEqual;
 
 /**
- * Class ConfigurationException
+ * Class AssertEqualParser
  */
-class ConfigurationException extends UnifyException {}
+class AssertEqualParser extends AbstractComparisonParser
+{
+    /**
+     * @return array
+     */
+    protected function getValidTokens()
+    {
+        return [UT_EQUALS, UT_EQUALS_MATCH_TYPE];
+    }
+
+    /**
+     * @param string $variable
+     * @param string $value
+     * @param int $iteration
+     * @return AssertionInterface
+     */
+    protected function newAssertion($variable, $value, $iteration = 0)
+    {
+        if ($this->containsToken([UT_EQUALS_MATCH_TYPE])) {
+            return new AssertStrictEqual($variable, $value, $iteration);
+        }
+
+        return new AssertEqual($variable, $value, $iteration);
+    }
+}

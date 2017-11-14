@@ -15,9 +15,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\Php\Core\AssertPropertyNotExists;
 
 /**
- * Class ConfigurationException
+ * Class AssertPropertyNotExistsParser
  */
-class ConfigurationException extends UnifyException {}
+class AssertPropertyNotExistsParser extends AssertPropertyExistsParser
+{
+    /**
+     * @param string $classOrVariableName
+     * @param string $propertyName
+     * @param int $iteration
+     * @return AssertPropertyNotExists
+     */
+    protected function newAssertion($classOrVariableName, $propertyName, $iteration = 0)
+    {
+        return new AssertPropertyNotExists($classOrVariableName, $propertyName, $iteration);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getValidTokens()
+    {
+        return [UT_OBJECT_NOT_HAS_PROPERTY];
+    }
+}

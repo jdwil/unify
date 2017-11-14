@@ -15,9 +15,24 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-namespace JDWil\Unify\Exception;
+namespace JDWil\Unify\Parser\Unify\Php;
+
+use JDWil\Unify\Assertion\AssertionInterface;
+use JDWil\Unify\ValueObject\PhpContext;
 
 /**
- * Class ConfigurationException
+ * Interface PHPParserInterface
  */
-class ConfigurationException extends UnifyException {}
+interface PhpParserInterface
+{
+    /**
+     * @return false|AssertionInterface[]
+     */
+    public function parse();
+
+    /**
+     * @param array $tokens
+     * @param PhpContext $context
+     */
+    public function initialize($tokens, PhpContext $context);
+}
