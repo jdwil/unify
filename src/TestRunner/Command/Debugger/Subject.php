@@ -51,6 +51,11 @@ class Subject extends AbstractCommand
      */
     private $value;
 
+    /**
+     * @var bool
+     */
+    private $doTrim;
+
     private function __construct() {}
 
     /**
@@ -192,6 +197,16 @@ class Subject extends AbstractCommand
     }
 
     /**
+     * @return $this
+     */
+    public function trimmed()
+    {
+        $this->doTrim = true;
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getXdebugCommand()
@@ -226,7 +241,13 @@ class Subject extends AbstractCommand
                 return sprintf('(%s) === array_filter((%s), %s)', $this->subject, $this->subject, $this->buildFilterClosure());
 
             default:
-                return sprintf('(%s) %s (%s)', $this->subject, $this->comparisonType, (string) $this->value);
+                $comparison = $this->doTrim ? 'trim(%s)' : '%s';
+                return sprintf(
+                    '(' . $comparison . ') %s (%s)',
+                    $this->subject,
+                    $this->comparisonType,
+                    (string) $this->value
+                );
         }
     }
 

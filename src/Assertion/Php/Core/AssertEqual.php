@@ -33,9 +33,12 @@ class AssertEqual extends AbstractComparisonAssertion
      */
     public function getDebuggerCommands()
     {
-        return [
-            Subject::named($this->variable)->equals($this->value)
-        ];
+        $equals = Subject::named($this->variable)->equals($this->value);
+        if ($this->block) {
+            $equals->trimmed();
+        }
+
+        return [$equals];
     }
 
     /**

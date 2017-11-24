@@ -55,6 +55,7 @@ define('UT_IS_READABLE', 138);
 define('UT_IS_NOT_READABLE', 139);
 define('UT_IS_WRITABLE', 140);
 define('UT_IS_NOT_WRITABLE', 141);
+define('UT_BLOCK_QUOTE', 142);
 
 /**
  * Class UnifyLexerDefinition
@@ -137,6 +138,12 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             self::TYPE_ARRAY => UT_ARRAY,
             self::VARIABLE => UT_VARIABLE,
 
+            ':' => function (Stateful $lexer) {
+                $lexer->swapState('BLOCK_TEXT');
+
+                return UT_BLOCK_QUOTE;
+            },
+
             'is empty' => UT_EMPTY,
             'is not empty' => UT_NOT_EMPTY,
 
@@ -170,7 +177,7 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             'is equal to' => UT_EQUALS,
             'is' => UT_EQUALS,
             'now equals' => UT_EQUALS,
-            'equals' => UT_EQUALS,
+            'equals|returns' => UT_EQUALS,
 
             // Arrays
             'contains|has' => function (Stateful $lexer) {
@@ -240,6 +247,10 @@ class UnifyLexerDefinition implements LexerDefinitionInterface
             'FUNCTION_CALL' => $procedureCall,
             'METHOD_CALL' => $procedureCall,
             'IN_VARIABLE' => $inVariable,
+
+            'BLOCK_TEXT' => [
+                '.*' => UT_QUOTED_STRING
+            ],
 
             'PROPERTY_REFERENCE' => [
                 self::WHITESPACE => UT_WHITESPACE,

@@ -190,8 +190,7 @@ class PhpParser
             $line = trim($line);
         });
 
-
-        $lines = array_values(array_filter($lines));
+        //$lines = array_values(array_filter($lines));
 
         for ($i = 0; $i < count($lines); $i++) {
             if (isset($lines[$i], $lines[$i + 1]) && substr($lines[$i], -1) === '\\') {
@@ -203,8 +202,9 @@ class PhpParser
             }
         }
 
-        $comment = array_filter($lines);
-        $comment = implode("\n", $comment);
+        //$comment = array_filter($lines);
+        $comment = implode("\n", $lines);
+        //var_dump($comment);
 
         return $comment;
     }

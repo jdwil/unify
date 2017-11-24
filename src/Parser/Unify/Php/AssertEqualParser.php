@@ -42,10 +42,16 @@ class AssertEqualParser extends AbstractComparisonParser
      */
     protected function newAssertion($variable, $value, $iteration = 0)
     {
-        if ($this->containsToken([UT_EQUALS_MATCH_TYPE])) {
-            return new AssertStrictEqual($variable, $value, $iteration);
+        $block = false;
+        if ($this->containsToken([UT_BLOCK_QUOTE]) && !in_array($value[0], ['"', "'"], true)) {
+            $value = '"' . trim($value) . '"';
+            $block = true;
         }
 
-        return new AssertEqual($variable, $value, $iteration);
+        if ($this->containsToken([UT_EQUALS_MATCH_TYPE])) {
+            return new AssertStrictEqual($variable, $value, $iteration, $block);
+        }
+
+        return new AssertEqual($variable, $value, $iteration, $block);
     }
 }

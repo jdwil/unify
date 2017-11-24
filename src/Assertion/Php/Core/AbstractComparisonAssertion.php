@@ -40,15 +40,22 @@ abstract class AbstractComparisonAssertion extends AbstractPhpAssertion
     protected $actualValue;
 
     /**
+     * @var bool
+     */
+    protected $block;
+
+    /**
      * AssertEqual constructor.
      * @param string $variable
      * @param mixed $value
      * @param int $iteration
+     * @param bool $block
      */
-    public function __construct($variable, $value, $iteration = 0)
+    public function __construct($variable, $value, $iteration = 0, $block = false)
     {
-        $this->variable = $variable;
-        $this->value = $value;
+        $this->variable = trim($variable);
+        $this->value = trim($value);
+        $this->block = $block;
 
         parent::__construct($iteration);
     }

@@ -38,6 +38,19 @@ abstract class AbstractUnifyCommand extends Command implements ContainerAwareInt
      */
     private $config;
 
+    /**
+     * @var string
+     */
+    private $rootDir;
+
+    /**
+     * @param $rootDir
+     */
+    public function setRootDir($rootDir)
+    {
+        $this->rootDir = $rootDir;
+    }
+
     protected function configure()
     {
         $this
@@ -113,19 +126,24 @@ abstract class AbstractUnifyCommand extends Command implements ContainerAwareInt
 
     protected function findRootDirectory()
     {
-        $found = true;
-        $filesystem = $this->getContainer()->get('filesystem');
-        $directory = __DIR__ .'/../..';
-        while (!$filesystem->exists(sprintf('%s/vendor/autoload.php', $directory))) {
-            $directory = sprintf('%s/..', $directory);
-            if (realpath($directory) === '/') {
-                $found = false;
-                break;
-            }
+        if (null !== $this->rootDir) {
+            $this->container->setParameter('autoload_path', sprintf('%s/vendor/autoload.php', $this->rootDir));
+            return;
         }
 
-        if ($found) {
-            $this->container->setParameter('autoload_path', sprintf('%s/vendor/autoload.php', realpath($directory)));
+        $directoryStack = [];
+        $filesystem = $this->getContainer()->get('filesystem');
+        $directory = __DIR__ .'/../..';
+        while (realpath($directory) !== '/') {
+            if ($filesystem->exists(realpath(sprintf('%s/vendor/autoload.php', $directory)))) {
+                $directoryStack[] = $directory;
+            }
+
+            $directory = sprintf('%s/..', $directory);
+        }
+
+        if (!empty($directoryStack)) {
+            $this->container->setParameter('autoload_path', sprintf('%s/vendor/autoload.php', realpath(array_pop($directoryStack))));
         } else {
             throw new ConfigurationException('Could not locate autoload.php');
         }

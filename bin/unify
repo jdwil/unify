@@ -10,7 +10,8 @@ use JDWil\Unify\Command\RunCommand;
 use JDWil\Unify\Command\DebugCommand;
 use JDWil\Unify\DependencyInjection\ContainerFactory;
 
-if (is_file($autoload = getcwd() . '/vendor/autoload.php')) {
+$rootDir = realpath(dirname($_SERVER['SCRIPT_FILENAME'], 3));
+if (is_file($autoload = $rootDir . '/vendor/autoload.php')) {
     require $autoload;
 }
 $container = ContainerFactory::buildContainer();
@@ -18,6 +19,7 @@ $container = ContainerFactory::buildContainer();
 $application = new Application();
 
 $runCommand = new RunCommand();
+$runCommand->setRootDir($rootDir);
 $runCommand->setContainer($container);
 $application->add($runCommand);
 
