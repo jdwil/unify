@@ -49,4 +49,14 @@ interface TestPlanInterface
      * @return bool
      */
     public function isPass();
+
+    /**
+     * @return string[]
+     */
+    public function getErrors();
+
+    /**
+     * @param string $error
+     */
+    public function addError($error);
 }

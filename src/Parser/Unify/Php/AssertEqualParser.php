@@ -44,7 +44,7 @@ class AssertEqualParser extends AbstractComparisonParser
     {
         $block = false;
         if ($this->containsToken([UT_BLOCK_QUOTE]) && !in_array($value[0], ['"', "'"], true)) {
-            $value = '"' . trim($value) . '"';
+            $value = "'" . trim(str_replace("'", "\'", $value)) . "'";
             $block = true;
         }
 

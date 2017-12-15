@@ -146,6 +146,7 @@ class XDebugSession extends AbstractSession
             "feature_set -i %d -n max_children -v 100\0",
             "feature_set -i %d -n max_data -v 100000\0",
             "stdout -i %d -c 2\0",
+            "breakpoint_set -i %d -t exception -x \"Fatal error\"\0",
             "step_into -i %d\0",
         ];
 
@@ -523,8 +524,16 @@ class XDebugSession extends AbstractSession
      */
     private function handleError(\DOMElement $response)
     {
-        if ($response->firstChild && $response->firstChild->localName === 'error') {
-            throw new XdebugException($response->firstChild->firstChild->nodeValue);
+        if ($response->firstChild) {
+            if ($response->firstChild->localName === 'error') {
+                throw new XdebugException($response->firstChild->firstChild->nodeValue);
+            } else if (
+                $response->firstChild->localName === 'message' &&
+                $response->firstChild->hasAttribute('exception') &&
+                $response->firstChild->getAttribute('exception') === 'Fatal error'
+            ) {
+                $this->testPlan->addError($response->firstChild->nodeValue);
+            }
         }
     }
 

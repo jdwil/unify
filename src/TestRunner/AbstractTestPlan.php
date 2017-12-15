@@ -41,6 +41,11 @@ abstract class AbstractTestPlan implements TestPlanInterface
     protected $assertions;
 
     /**
+     * @var string[]
+     */
+    protected $errors;
+
+    /**
      * ShellTestPlan constructor.
      * @param string $file
      * @param string $subject
@@ -51,6 +56,7 @@ abstract class AbstractTestPlan implements TestPlanInterface
         $this->file = $file;
         $this->subject = $subject;
         $this->assertions = $assertionQueue;
+        $this->errors = [];
     }
 
     /**
@@ -97,5 +103,21 @@ abstract class AbstractTestPlan implements TestPlanInterface
         }
 
         return true;
+    }
+
+    /**
+     * @param string $error
+     */
+    public function addError($error)
+    {
+        $this->errors[] = $error;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getErrors()
+    {
+        return $this->errors;
     }
 }

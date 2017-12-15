@@ -241,9 +241,10 @@ class Subject extends AbstractCommand
                 return sprintf('(%s) === array_filter((%s), %s)', $this->subject, $this->subject, $this->buildFilterClosure());
 
             default:
-                $comparison = $this->doTrim ? 'trim(%s)' : '%s';
+                $comparison = $this->doTrim ? 'trim(preg_replace("/\s+/", " ", %s))' : '%s';
+                $target = $this->doTrim ? 'preg_replace("/\s+/", " ", %s)' : '%s';
                 return sprintf(
-                    '(' . $comparison . ') %s (%s)',
+                    '(' . $comparison . ') %s (' . $target . ')',
                     $this->subject,
                     $this->comparisonType,
                     (string) $this->value
