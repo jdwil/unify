@@ -24,7 +24,7 @@ To install Unify with composer, run:
 [unify]: # (skip)
 
 ```shell
-composer require jdwil/unify:dev-master#0.1.1
+composer require jdwil/unify
 ```
 
 You may want to create a symlink in the bin/ directory of your root project
